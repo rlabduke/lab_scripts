@@ -29,6 +29,8 @@ if __name__ == '__main__':
         print usage
         exit(1)
 
+    pdb = sys.argv[1].lower() #NOTE the lower is an assumption for case-sensitive file systems
+
     #path to this PDB
     interstice = pdb[1:3]
     inpath = muscle_path + interstice + "/pdb" + pdb + ".ent.gz"
