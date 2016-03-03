@@ -30,18 +30,20 @@ if __name__ == '__main__':
         exit(1)
 
     pdb = sys.argv[1].lower() #NOTE the lower is an assumption for case-sensitive file systems
+    cwd = os.getcwd() + "/"
 
     #path to this PDB
     interstice = pdb[1:3]
-    inpath = muscle_path + interstice + "/pdb" + pdb + ".ent.gz"
-    unzippedpath = os.getcwd() + "/" +  pdb + ".pdb"
+    in_path = muscle_path + interstice + "/pdb" + pdb + ".ent.gz"
+    unzipped_path = cwd + pdb + ".pdb"
 
     #generate local copy of file
-    gunzip_command = "gunzip --to-stdout " + inpath + " > " + unzippedpath
+    gunzip_command = "gunzip --to-stdout " + in_path + " > " + unzipped_path
     print gunzip_command
 
     #run Reduce
-    reduce_command = "phenix.reduce -quiet -trim -allalt " + unzippedpath
+    reduced_path = cwd + pdb + "H.pdb"
+    reduce_command = "phenix.reduce -quiet -trim -allalt " + unzipped_path + " > " + reduced_path
     print reduce_command
 
 
