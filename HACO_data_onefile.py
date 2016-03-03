@@ -61,8 +61,6 @@ if __name__ == '__main__':
     #     - to generate dssp.txt file (I have trimmed mine, but script could be revised to include                 'line.startswith')
 
     #run Probe
-
-
-# Run probe command:  $probe -once -mc -Radius[value ???  I used 1.0] -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" xxxxH.pdb >> xxxxH_onedot_HACO.txt       **Note:  the two spaces following the O are correct.
-#     - to generate text file including onedot (single entry for contacts) mcmc contacts for all                 HAs (including the HA2s on Gly) and C(O)s in a pdb file.
-#phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" 3kwdH.pdb
+    #**Note:  the two underscores following the O are correct.
+    probe_path = cwd + pdb + "H_onedot_HACO.txt"
+    probe_command = 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " probe_path
