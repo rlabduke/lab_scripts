@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/python
 
 # Instructions from Liz:
 
