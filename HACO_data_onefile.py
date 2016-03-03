@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import sys, os, os.path
+
 # Instructions from Liz:
 
 # Run MolProbity on pdb id
