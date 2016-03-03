@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     #run Reduce
     reduced_path = cwd + pdb + "H.pdb"
-    reduce_command = "phenix.reduce -quiet -trim -allalt " + unzipped_path + " > " + reduced_path
+    reduce_command = "phenix.reduce -quiet -trim -allalt " + unzipped_path + " | awk '\$0 !~ /^USER MOD/' > " + reduced_path
     print reduce_command
 
 
