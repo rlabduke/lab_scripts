@@ -43,8 +43,11 @@ if __name__ == '__main__':
 
     #run Reduce
     reduced_path = cwd + pdb + "H.pdb"
-    reduce_command = "phenix.reduce -quiet -trim -allalt " + unzipped_path + " | grep -v '^USER MOD' > " + reduced_path
+    reduce_command = "phenix.reduce -quiet -trim -allalt " + unzipped_path + " | grep -v '^USER  MOD' > " + reduced_path
     print reduce_command
 
+    #run CaBLAM
+    CaBLAM_results_path = cwd + pdb + "_3CA_angle.txt"
+    CaBLAM_command = "phenix.cablam_training cablam=True " + reduced_path + " > " +  CaBLAM_results_path
+    print CaBLAM_command
 
-#Generate Re
