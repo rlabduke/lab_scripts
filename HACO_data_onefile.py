@@ -30,10 +30,19 @@ if __name__ == '__main__':
     gunzip_command = "gunzip --to-stdout " + in_path + " > " + unzipped_path
     print gunzip_command
 
+    #run Reduce to strip old H
+    reduce_stripped_path = cwd + pdb + ".stripped.pdb"
+    reduce_strip_command = "phenix.reduce -quiet -trim -allalt " + unzipped_path + " | grep -v '^USER  MOD' > " + reduce_stripped_path
+    print reduce_strip_command
+
     #run Reduce
     reduced_path = cwd + pdb + "H.pdb"
-    reduce_command = "phenix.reduce -quiet -trim -allalt " + unzipped_path + " | grep -v '^USER  MOD' > " + reduced_path
+    reduce_command = "phenix.reduce -quiet -nobuild9999 " + reduce_stripped_path + " > " + reduced_path
     print reduce_command
+
+    #remove stripped pdb
+    rm_strip_command = "rm " + reduce_stripped_path
+    print rm_strip_command
 
     #run CaBLAM
     CaBLAM_results_path = cwd + pdb + "_3CA_angle.txt"
