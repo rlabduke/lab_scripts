@@ -47,7 +47,7 @@ if __name__ == '__main__':
     #this is dumb to use FTP, but when I tried rsyncing the whole database I realized they have literally every PDB's dssp in one directory, which causes performance issues
     #curl ftp://ftp.cmbi.ru.nl/pub/molbio/data/dssp/1ubq.dssp
     dssp_path = cwd + pdb + ".dssp"
-    dssp_command = "curl ftp://ftp.cmbi.ru.nl/pub/molbio/data/dssp/" + pdb + ".dssp"
+    dssp_command = "curl ftp://ftp.cmbi.ru.nl/pub/molbio/data/dssp/" + pdb + ".dssp > " + dssp_path
     print dssp_command
 
 
