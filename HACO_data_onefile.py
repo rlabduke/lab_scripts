@@ -2,12 +2,6 @@
 
 import sys, os, os.path
 
-# Run probe command:  $probe -once -mc -Radius[value ???  I used 1.0] -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" xxxxH.pdb >> xxxxH_onedot_HACO.txt       **Note:  the two spaces following the O are correct.
-#     - to generate text file including onedot (single entry for contacts) mcmc contacts for all                 HAs (including the HA2s on Gly) and C(O)s in a pdb file.
-
-# Run Angle_add_HACO.py  (see attached)
-#      - to combine pertinent data from all three previous runs into one text file and then transfer to an excel sheet for graphing, sorting.
-
 usage = '''HACO_data_onefile.py PDBid          Will go look for the PDB with that id (for 1UBQ) /home/smlewis/whole_PDB_as_PDB/ub/pdb1ubq.ent.gz, and ????'''
 
 muscle_path = "/home/smlewis/whole_PDB_as_PDB/"
@@ -64,3 +58,7 @@ if __name__ == '__main__':
     #**Note:  the two underscores following the O are correct.
     probe_path = cwd + pdb + "H_onedot_HACO.txt"
     probe_command = 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " probe_path
+
+# Run Angle_add_HACO.py  (see attached)
+#      - to combine pertinent data from all three previous runs into one text file and then transfer to an excel sheet for graphing, sorting.
+
