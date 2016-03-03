@@ -57,8 +57,10 @@ if __name__ == '__main__':
     #run Probe
     #**Note:  the two underscores following the O are correct.
     probe_path = cwd + pdb + "H_onedot_HACO.txt"
-    probe_command = 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " probe_path
+    probe_command = 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
+    print probe_command
 
-# Run Angle_add_HACO.py  (see attached)
-#      - to combine pertinent data from all three previous runs into one text file and then transfer to an excel sheet for graphing, sorting.
-
+    # Run Angle_add_HACO.py to combine pertinent data from all three previous runs into one text file and then transfer to an excel sheet for graphing, sorting.
+    #Total commandline is "python Angle_add_HACO_02292016.py 3XXXH_cablam3CA_angle.txt 3XXX__dssp_1lineHeader.txt 3XXXH_onedot_1.0rad_All_02292016.txt"
+    HACO_Liz_command = "python Angle_add_HACO.py " + CaBLAM_results_path + " " + dssp_path + " " + probe_path
+    print HACO_Liz_command
