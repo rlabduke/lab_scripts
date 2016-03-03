@@ -2,14 +2,6 @@
 
 import sys, os, os.path
 
-# Instructions from Liz:
-
-# Run MolProbity on pdb id
-#     - to generate xxxxH.pdb, multi-crit chart, and multi-crit kin with H-bonds, etc.
-
-# Run cablam command in phenix:  $phenix.cablam_training cablam=True ~[path from phenix directory location to pdb_file_name]/3kwdH.pdb > 3kwdH_3CA_angle.txt
-#      - to generate residue id info and the 3CA angle with residue CA in the middle (n-1,             n, n+1)
-
 # Run DSSP on xxxx.pdb
 #     - to generate dssp.txt file (I have trimmed mine, but script could be revised to include                 'line.startswith')
 
@@ -50,4 +42,12 @@ if __name__ == '__main__':
     CaBLAM_results_path = cwd + pdb + "_3CA_angle.txt"
     CaBLAM_command = "phenix.cablam_training cablam=True " + reduced_path + " > " +  CaBLAM_results_path
     print CaBLAM_command
+
+    #get DSSP
+    #this is dumb to use FTP, but when I tried rsyncing the whole database I realized they have literally every PDB's dssp in one directory, which causes performance issues
+    #curl ftp://ftp.cmbi.ru.nl/pub/molbio/data/dssp/1ubq.dssp
+    dssp_path = cwd + pdb + ".dssp"
+    dssp_command = "curl ftp://ftp.cmbi.ru.nl/pub/molbio/data/dssp/" + pdb + ".dssp"
+    print dssp_command
+
 
