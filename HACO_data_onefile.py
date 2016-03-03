@@ -8,7 +8,7 @@
 # Run cablam command in phenix:  $phenix.cablam_training cablam=True ~[path from phenix directory location to pdb_file_name]/3kwdH.pdb > 3kwdH_3CA_angle.txt
 #      - to generate residue id info and the 3CA angle with residue CA in the middle (n-1,             n, n+1)
 
-# Run DSSP on xxxx.pdb 
+# Run DSSP on xxxx.pdb
 #     - to generate dssp.txt file (I have trimmed mine, but script could be revised to include                 'line.startswith')
 
 # Run probe command:  $probe -once -mc -Radius[value ???  I used 1.0] -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" xxxxH.pdb >> xxxxH_onedot_HACO.txt       **Note:  the two spaces following the O are correct.
@@ -17,13 +17,28 @@
 # Run Angle_add_HACO.py  (see attached)
 #      - to combine pertinent data from all three previous runs into one text file and then transfer to an excel sheet for graphing, sorting.
 
+usage = '''HACO_data_onefile.py PDBid          Will go look for the PDB with that id (for 1UBQ) /home/smlewis/whole_PDB_as_PDB/ub/pdb1ubq.ent.gz, and ????'''
 
-echo "usage: HACO_data_onefile.bash filename 1>&2"
+muscle_path = "/home/smlewis/whole_PDB_as_PDB/"
 
-$muscle_pdb_path=/home/smlewis/whole_PDB_as_PDB/
+if __name__ == '__main__':
 
-#generate local copy of file
-gunzip 
+    if (len(sys.argv) != 2) :
+        print usage
+        exit(1)
+
+    #path to this PDB
+    interstice = pdb[1:3]
+    inpath = muscle_path + interstice + "/pdb" + pdb + ".ent.gz"
+    unzippedpath = os.getcwd() + "/" +  pdb + ".pdb"
+
+    #generate local copy of file
+    gunzip_command = "gunzip --to-stdout " + inpath + " > " + unzippedpath
+    print gunzip_command
+
+    #run Reduce
+    reduce_command = "phenix.reduce -quiet -trim -allalt " + unzippedpath
+    print reduce_command
 
 
 #Generate Re
