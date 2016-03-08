@@ -36,10 +36,11 @@ for line in cablamFile:
   CA3angle = adjustlength[4].strip()
   key = ResID[4:10]   ## had to put precise spaces to match dssp format exactly
   
-   ##cablamDict[key] = round(float(CA3angle), 3)
+      ##cablamDict[key] = round(float(CA3angle), 3)
   if CA3angle == "NULL":
   	continue
-  cablamDict[key] = "%.3f" % float(CA3angle)   ## Have to use the dictionary locator, not the variable name
+  
+  cablamDict[key] = "%.1f" % float(CA3angle)   ## Have to use the dictionary locator, not the variable name
 
 ## print ResID + "  " + CA3angle
 
@@ -94,23 +95,37 @@ for line in probefile:
   if line.startswith("name"):
     continue
   adjustlength = line.split(":")
-  SrcResNum = line[12:15]
+  SrcResNum = line[11:15]     
   SrcChainID = line[10:11]
   SrcResName = line[16:19]
   SrcAtom = line[20:25]
-  TgtResNum = line[28:33]
+  TgtResNum = line[28:32]
   TgtChainID = line[27:28]
-  TgtResName = line[33:37]
-  TgtAtom = line[38:41]
+  TgtResName = line[33:36]
+  TgtAtom = line[37:41]
   GapWidth = adjustlength[6]
-  key = SrcChainID + " " + SrcResNum + " "
+  Srckey = SrcChainID + SrcResNum + " "
+  Tgtkey = TgtChainID + TgtResNum + " "
 
-  ProbeDict[key] = GapWidth          ##adds this to dict: {key:SecStruct}                                                                               \
+  ProbeDict[Srckey] = GapWidth          ##adds this to dict: {key:SecStruct}                                                                               \
                                                                                                                                                          
+  ## print ProbeDict[key]
+  
+  if Srckey not in cablamDict:
+    continue
+  if Tgtkey not in cablamDict:
+    continue
+    
+  ##keys = DsspDict.keys()
+##keys.sort()
+##for key in keys:
+##  print key, DsspDict[key]  
 
-  print "3kwdH" + "," +  key + "," + SrcResName + "," + SrcAtom + "," + cablamDict[key] + "," + DsspDict[key] + "," + TgtChainID + "," + TgtResNum + "," +  TgtResName + "," + TgtAtom + "," +ProbeDict[key]
+
+  print "1hm9H" + "," + Srckey + "," + SrcResName + "," + SrcAtom + "," + cablamDict[Srckey] + "," + DsspDict[Srckey] + "," + TgtChainID + "," + TgtResNum + "," +  TgtResName + "," + TgtAtom + "," + cablamDict[Tgtkey] + "," + DsspDict[Tgtkey] + "," + ProbeDict[Srckey]
 
 probefile.close()
 dssp_file.close()
 cablamFile.close()
 
+##  START HERE - figure out how to add back in the DSSP designations and add Cablam 3CA angle for Tgt residues .  Mark on excel sheets all crease residues and all beta-barrel dots residues.
