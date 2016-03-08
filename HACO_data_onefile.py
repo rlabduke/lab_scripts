@@ -23,11 +23,12 @@ if __name__ == '__main__':
         interstice = pdb[1:3]
         in_path = muscle_path + interstice + "/pdb" + pdb + ".ent.gz"
     else:
+        in_path = "pdb" + pdb + ".ent.gz"
         #wget ftp://ftp.wwpdb.org/pub/pdb/data/structures/all/pdb/pdbXXXX.ent.gz
-        get_PDB_command = "wget ftp://ftp.wwpdb.org/pub/pdb/data/structures/all/pdb/pdb" + pdb + ".ent.gz"
+        get_PDB_command = "curl ftp://ftp.wwpdb.org/pub/pdb/data/structures/all/pdb/pdb" + pdb + ".ent.gz > " + in_path
         print get_PDB_command
         os.system(get_PDB_command)
-        in_path = "pdb" + pdb + ".ent.gz"
+
 
     #generate local copy of file
     unzipped_path = cwd + pdb + ".pdb"
