@@ -15,12 +15,22 @@ if __name__ == '__main__':
     pdb = sys.argv[1].lower() #NOTE the lower is an assumption for case-sensitive file systems
     cwd = os.getcwd() + "/"
 
+    in_path = ""
+    muscle = False
+
     #path to this PDB
-    interstice = pdb[1:3]
-    in_path = muscle_path + interstice + "/pdb" + pdb + ".ent.gz"
-    unzipped_path = cwd + pdb + ".pdb"
+    if muscle:
+        interstice = pdb[1:3]
+        in_path = muscle_path + interstice + "/pdb" + pdb + ".ent.gz"
+    else:
+        #wget ftp://ftp.wwpdb.org/pub/pdb/data/structures/all/pdb/pdbXXXX.ent.gz
+        get_PDB_command = "wget ftp://ftp.wwpdb.org/pub/pdb/data/structures/all/pdb/pdb" + pdb + ".ent.gz"
+        print get_PDB_command
+        os.system(get_PDB_command)
+        in_path = "pdb" + pdb + ".ent.gz"
 
     #generate local copy of file
+    unzipped_path = cwd + pdb + ".pdb"
     gunzip_command = "gunzip --to-stdout " + in_path + " > " + unzipped_path
     print gunzip_command
     os.system(gunzip_command)
