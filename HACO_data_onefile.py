@@ -75,8 +75,9 @@ if __name__ == '__main__':
     #**Note:  the two underscores following the O are correct.
     probe_path = cwd + pdb + "H_onedot_HACO.txt"
     probe_command = 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
+    ##probe_command = '~/Desktop/Probe_2015/probe/probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
     print probe_command
-    os.system(probe_command)
+    os.system(probe_command)    ## to change this script, pick one of the probe pathways, acccording to which probe version is most current?? best?? 
 
     # Run Angle_add_HACO.py to combine pertinent data from all three previous runs into one text file and then transfer to an excel sheet for graphing, sorting.
     #Total commandline is "python Angle_add_HACO_02292016.py 3XXXH_cablam3CA_angle.txt 3XXX__dssp_1lineHeader.txt 3XXXH_onedot_1.0rad_All_02292016.txt"
