@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 import os, sys
-#Total commandline is "python Angle_add_HACO_02292016.py 3XXXH_cablam3CA_angle.txt 3XXX__dssp_1lineHeader.txt 3XXXH_onedot_1.0rad_All_02292016.txt"
-# sys.argv is ["python Angle_add_HACO_02292016.py", "cablam_file", "dssp_file", "Probe_file"]
+#Total commandline is "python Angle_add_HACO_02292016.py 3XXXH_cablam3CA_angle.txt 3XXX__dssp_1lineHeader.txt 3XXXH_onedot_1.0rad_All_02292016.txt PDBNAME"
+# sys.argv is ["python Angle_add_HACO_02292016.py", "cablam_file", "dssp_file", "Probe_file", "PDBNAME"]
 # sys.argv[1:] is ["cablam_file", "dssp_file", "Probe_file"  ## [1:] is a string slicing notation adding everything that follows the command itself.
 
 args = sys.argv[1:]     
@@ -123,8 +123,8 @@ for line in probefile:
 ##for key in keys:
 ##  print key, DsspDict[key]  
 
-
-  print "1hm9H" + "," + Srckey + "," + SrcResName + "," + SrcAtom + "," + cablamDict[Srckey] + "," + DsspDict[Srckey] + "," + TgtChainID + "," + TgtResNum + "," +  TgtResName + "," + TgtAtom + "," + cablamDict[Tgtkey] + "," + DsspDict[Tgtkey] + "," + ProbeDict[Srckey]
+  pdbname = args[3]
+  print pdbname + "," + Srckey + "," + SrcResName + "," + SrcAtom + "," + cablamDict[Srckey] + "," + DsspDict[Srckey] + "," + TgtChainID + "," + TgtResNum + "," +  TgtResName + "," + TgtAtom + "," + cablamDict[Tgtkey] + "," + DsspDict[Tgtkey] + "," + ProbeDict[Srckey]
 
 probefile.close()
 dssp_file.close()

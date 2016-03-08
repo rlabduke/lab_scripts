@@ -81,6 +81,6 @@ if __name__ == '__main__':
     # Run Angle_add_HACO.py to combine pertinent data from all three previous runs into one text file and then transfer to an excel sheet for graphing, sorting.
     #Total commandline is "python Angle_add_HACO_02292016.py 3XXXH_cablam3CA_angle.txt 3XXX__dssp_1lineHeader.txt 3XXXH_onedot_1.0rad_All_02292016.txt"
     HACO_path = cwd + pdb + ".HACOresult.csv"
-    HACO_Liz_command = "python Angle_add_HACO.py " + CaBLAM_results_path + " " + dssp_path + " " + probe_path + " > " + HACO_path
+    HACO_Liz_command = "python Angle_add_HACO.py " + CaBLAM_results_path + " " + dssp_path + " " + probe_path + " " + pdb + " > " + HACO_path
     print HACO_Liz_command
     os.system(HACO_Liz_command)
