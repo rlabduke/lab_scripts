@@ -74,7 +74,8 @@ if __name__ == '__main__':
     #run Probe
     #**Note:  the two underscores following the O are correct.
     probe_path = cwd + pdb + "H_onedot_HACO.txt"
-    probe_command = 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
+    ##probe_command = 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
+    probe_command = '~/Desktop/Probe_2015/probe/probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
     print probe_command
     os.system(probe_command)
 
