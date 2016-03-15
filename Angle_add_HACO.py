@@ -40,9 +40,9 @@ for line in cablamFile:
   
       ##cablamDict[key] = round(float(CA3angle), 3)
   if CA3angle == "NULL":
-  	continue
-  
-  cablamDict[key] = "%.1f" % float(CA3angle)   ## Have to use the dictionary locator, not the variable name
+  	cablamDict[key] = CA3angle          #This is entering "NULL" into the dictionary value set.
+  else:
+  	cablamDict[key] = "%.1f" % float(CA3angle)   ## Have to use the dictionary locator, not the variable name
 
 ## print ResID + "  " + CA3angle
 
