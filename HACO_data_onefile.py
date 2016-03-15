@@ -15,12 +15,13 @@ if __name__ == '__main__':
     pdb = sys.argv[1].lower() #NOTE the lower is an assumption for case-sensitive file systems
     cwd = os.getcwd() + "/"
 
-    phenix_path = "/Applications/phenix-1.10.1-2155/build/setpaths.sh"
-    load_phenix = "source " + phenix_path + " && "
-
-    in_path = ""
-    muscle = False
-
+    phenix_path = "/Applications/phenix-1.10.1-2155/build/setpaths.sh"        ##Added to source phenix automatically whenever this script is run, 
+    load_phenix = "source " + phenix_path + " && "                            ##rather than using the 'do-phenix" command line alias command.
+                                                                              ## "source" could also be included in the line18 string as "source /Applications/phenix-1.10.1-2155/build/setpaths.sh" 
+    in_path = ""                                    ## Path to the alias do_phenix was found this way:
+    muscle = False                                  ##  10:33:18 c3po ~> alias do_phenix
+                                                    ##  source /Applications/phenix-1.10.1-2155/build/setpaths.csh
+                                                    ##NOTE:  The alias path has ".csh" suffix, but the auto-source path is the same BUT has a ".sh" suffix.
     #path to this PDB
     if muscle:
         interstice = pdb[1:3]
@@ -39,13 +40,13 @@ if __name__ == '__main__':
     print gunzip_command
     os.system(gunzip_command)
 
-    #run Reduce to strip old H
+    #run Reduce to strip old H  -  phenix is called, so the alias is auto-sourced with "load_phenix" as scripted above.
     reduce_stripped_path = cwd + pdb + ".stripped.pdb"
     reduce_strip_command = load_phenix + "phenix.reduce -quiet -trim -allalt " + unzipped_path + " | grep -v '^USER  MOD' > " + reduce_stripped_path
     print reduce_strip_command
     os.system(reduce_strip_command)
 
-    #run Reduce
+    #run Reduce  -  phenix is called, so the alias is auto-sourced with "load_phenix" as scripted above.
     reduced_path = cwd + pdb + "H.pdb"
     reduce_command = load_phenix + "phenix.reduce -quiet -nobuild9999 " + reduce_stripped_path + " > " + reduced_path
     print reduce_command
@@ -56,7 +57,7 @@ if __name__ == '__main__':
     print rm_strip_command
     os.system(rm_strip_command)
 
-    #run CaBLAM
+    #run CaBLAM  -  phenix is called, so the alias is auto-sourced with "load_phenix" as scripted above.
     CaBLAM_results_path = cwd + pdb + "_3CA_angle.txt"
     CaBLAM_command = load_phenix + "phenix.cablam_training cablam=True " + reduced_path + " > " +  CaBLAM_results_path
     print CaBLAM_command
@@ -77,7 +78,7 @@ if __name__ == '__main__':
     #run Probe
     #**Note:  the two underscores following the O are correct.
     probe_path = cwd + pdb + "H_onedot_HACO.txt"
-    ##probe_command = load_phenix + 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
+    ##probe_command = load_phenix + 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path  ## added auto-source "load_phenix" in case this is ever needed.
     probe_command = '~/Desktop/Probe_2015/probe/probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
     print probe_command
     os.system(probe_command)    ## to change this script, pick one of the probe pathways, acccording to which probe version is most current?? best?? 
