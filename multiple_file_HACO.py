@@ -23,4 +23,5 @@ if __name__ == '__main__':
         os.chdir(eachPDB)
         HACO_cmd = HACO_data_onefile + eachPDB.upper()
         print HACO_cmd
+        os.system(HACO_cmd)
         os.chdir(working_dir)
