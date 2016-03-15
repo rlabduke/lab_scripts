@@ -15,6 +15,9 @@ if __name__ == '__main__':
     pdb = sys.argv[1].lower() #NOTE the lower is an assumption for case-sensitive file systems
     cwd = os.getcwd() + "/"
 
+    phenix_path = "/Applications/phenix-1.10.1-2155/build/setpaths.sh"
+    load_phenix = phenix_path + " && "
+
     in_path = ""
     muscle = False
 
@@ -38,13 +41,13 @@ if __name__ == '__main__':
 
     #run Reduce to strip old H
     reduce_stripped_path = cwd + pdb + ".stripped.pdb"
-    reduce_strip_command = "phenix.reduce -quiet -trim -allalt " + unzipped_path + " | grep -v '^USER  MOD' > " + reduce_stripped_path
+    reduce_strip_command = load_phenix + "phenix.reduce -quiet -trim -allalt " + unzipped_path + " | grep -v '^USER  MOD' > " + reduce_stripped_path
     print reduce_strip_command
     os.system(reduce_strip_command)
 
     #run Reduce
     reduced_path = cwd + pdb + "H.pdb"
-    reduce_command = "phenix.reduce -quiet -nobuild9999 " + reduce_stripped_path + " > " + reduced_path
+    reduce_command = load_phenix + "phenix.reduce -quiet -nobuild9999 " + reduce_stripped_path + " > " + reduced_path
     print reduce_command
     os.system(reduce_command)
 
@@ -55,7 +58,7 @@ if __name__ == '__main__':
 
     #run CaBLAM
     CaBLAM_results_path = cwd + pdb + "_3CA_angle.txt"
-    CaBLAM_command = "phenix.cablam_training cablam=True " + reduced_path + " > " +  CaBLAM_results_path
+    CaBLAM_command = load_phenix + "phenix.cablam_training cablam=True " + reduced_path + " > " +  CaBLAM_results_path
     print CaBLAM_command
     os.system(CaBLAM_command)
 
@@ -74,7 +77,7 @@ if __name__ == '__main__':
     #run Probe
     #**Note:  the two underscores following the O are correct.
     probe_path = cwd + pdb + "H_onedot_HACO.txt"
-    ##probe_command = 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
+    ##probe_command = load_phenix + 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
     probe_command = '~/Desktop/Probe_2015/probe/probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
     print probe_command
     os.system(probe_command)    ## to change this script, pick one of the probe pathways, acccording to which probe version is most current?? best?? 
