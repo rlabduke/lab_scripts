@@ -16,7 +16,7 @@ if __name__ == '__main__':
     cwd = os.getcwd() + "/"
 
     phenix_path = "/Applications/phenix-1.10.1-2155/build/setpaths.sh"
-    load_phenix = phenix_path + " && "
+    load_phenix = "source " + phenix_path + " && "
 
     in_path = ""
     muscle = False
