@@ -18,10 +18,10 @@ if __name__ == '__main__':
 
     pdblist = sys.argv[1]
     for eachPDB in (open(pdblist, 'r').readlines()): #iterate through pdblist file
-        eachPDB = eachPDB.rstrip() #strip trailing endline
+        eachPDB = eachPDB.rstrip().upper() #strip trailing endline
         os.mkdir(eachPDB)
         os.chdir(eachPDB)
-        HACO_cmd = HACO_data_onefile + eachPDB.upper()
+        HACO_cmd = HACO_data_onefile + eachPDB
         print HACO_cmd
         os.system(HACO_cmd)
         os.chdir(working_dir)
