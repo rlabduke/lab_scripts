@@ -2,7 +2,7 @@
 
 import sys, os, os.path
 
-usage = '''HACO_data_onefile.py PDBid          Will go look for the PDB with that id (for 1UBQ) /home/smlewis/whole_PDB_as_PDB/ub/pdb1ubq.ent.gz, and ????'''
+usage = '''HACO_data_onefile.py PDBid          Will go look for the PDB with that id (for 1UBQ) /home/smlewis/whole_PDB_as_PDB/ub/pdb1ubq.ent.gz, or from the PDB (currently hardcoded for latter, currently hardcoded for user videau on c3po)'''
 
 muscle_path = "/home/smlewis/whole_PDB_as_PDB/"
 
@@ -15,13 +15,18 @@ if __name__ == '__main__':
     pdb = sys.argv[1].lower() #NOTE the lower is an assumption for case-sensitive file systems
     cwd = os.getcwd() + "/"
 
-    phenix_path = "/Applications/phenix-1.10.1-2155/build/setpaths.sh"        ##Added to source phenix automatically whenever this script is run, 
-    load_phenix = "source " + phenix_path + " && "                            ##rather than using the 'do-phenix" command line alias command.
-                                                                              ## "source" could also be included in the line18 string as "source /Applications/phenix-1.10.1-2155/build/setpaths.sh" 
-    in_path = ""                                    ## Path to the alias do_phenix was found this way:
-    muscle = False                                  ##  10:33:18 c3po ~> alias do_phenix
-                                                    ##  source /Applications/phenix-1.10.1-2155/build/setpaths.csh
-                                                    ##NOTE:  The alias path has ".csh" suffix, but the auto-source path is the same BUT has a ".sh" suffix.
+    ##Added to source phenix automatically whenever this script is run,
+    ##rather than using the 'do-phenix" command line alias command.
+    ## "source" could also be included in the line18 string as "source /Applications/phenix-1.10.1-2155/build/setpaths.sh"
+    ## Path to the alias do_phenix was found this way:
+    ##  10:33:18 c3po ~> alias do_phenix
+    ##  source /Applications/phenix-1.10.1-2155/build/setpaths.csh
+    ##NOTE:  The alias path has ".csh" suffix, but the auto-source path is the same BUT has a ".sh" suffix.
+    phenix_path = "/Applications/phenix-1.10.1-2155/build/setpaths.sh"
+    load_phenix = "source " + phenix_path + " && "
+
+    in_path = ""
+    muscle = False
     #path to this PDB
     if muscle:
         interstice = pdb[1:3]
@@ -81,7 +86,7 @@ if __name__ == '__main__':
     ##probe_command = load_phenix + 'phenix.probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path  ## added auto-source "load_phenix" in case this is ever needed.
     probe_command = '~/Desktop/Probe_2015/probe/probe -once -mc -Radius1.0 -u -onedot "atom_HA_,atom_HA2 protein" "atom_O__ protein" ' + reduced_path + " > " + probe_path
     print probe_command
-    os.system(probe_command)    ## to change this script, pick one of the probe pathways, acccording to which probe version is most current?? best?? 
+    os.system(probe_command)    ## to change this script, pick one of the probe pathways, acccording to which probe version is most current?? best??
 
     # Run Angle_add_HACO.py to combine pertinent data from all three previous runs into one text file and then transfer to an excel sheet for graphing, sorting.
     #Total commandline is "python Angle_add_HACO_02292016.py 3XXXH_cablam3CA_angle.txt 3XXX__dssp_1lineHeader.txt 3XXXH_onedot_1.0rad_All_02292016.txt"
