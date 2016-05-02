@@ -22,7 +22,7 @@ with open(filename) as f:
             resn2=int(SSBOND[40:44])
             #print resn1, "resnspacer", resn2
             if (resn1+1) == resn2:
-                print SSBOND
+                print SSBOND.rstrip()
 
 #for each line
 #is same chain?
