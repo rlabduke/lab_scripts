@@ -13,11 +13,13 @@ with open(filename) as f:
     for SSBOND in f:
         chain1=SSBOND[24]
         chain2=SSBOND[38]
-        print chain1, "spacer", chain2
+        #print chain1, "chainspacer", chain2
         if chain1 == chain2:
-            resn1=SSBOND[26-29]
-            resn2=SSBOND[40-43]
-            print resn1, "spacer", resn2
+            resn1=SSBOND[26:29]
+            resn2=SSBOND[40:43]
+            #print resn1, "resnspacer", resn2
+            if resn1 == resn2:
+                print SSBOND
 
 #for each line
 #is same chain?
