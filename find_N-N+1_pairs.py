@@ -11,9 +11,9 @@
 filename = "all_ssbond_recs.proc.txt"
 with open(filename) as f:
     for SSBOND in f:
-        chain1=SSBOND[16]
-        chain2=SSBOND[29]
-        print chain1, chain2
+        chain1=SSBOND[24]
+        chain2=SSBOND[38]
+        print chain1, "spacer", chain2
 
 #for each line
 #is same chain?
