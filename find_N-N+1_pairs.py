@@ -15,10 +15,13 @@ with open(filename) as f:
         chain2=SSBOND[38]
         #print chain1, "chainspacer", chain2
         if chain1 == chain2:
-            resn1=SSBOND[26:29]
-            resn2=SSBOND[40:43]
+            #these counts would include insertion code
+            #resn1=SSBOND[26:31]
+            #resn2=SSBOND[40:45]
+            resn1=int(SSBOND[26:30])
+            resn2=int(SSBOND[40:44])
             #print resn1, "resnspacer", resn2
-            if resn1 == resn2:
+            if (resn1+1) == resn2:
                 print SSBOND
 
 #for each line
