@@ -14,6 +14,10 @@ with open(filename) as f:
         chain1=SSBOND[24]
         chain2=SSBOND[38]
         print chain1, "spacer", chain2
+        if chain1 == chain2:
+            resn1=SSBOND[26-29]
+            resn2=SSBOND[40-43]
+            print resn1, "spacer", resn2
 
 #for each line
 #is same chain?
