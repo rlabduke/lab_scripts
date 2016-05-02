@@ -24,7 +24,6 @@ with open(filename) as f:
             if (resn1+1) == resn2:
                 print SSBOND.rstrip()
 
-#for each line
-#is same chain?
-#are resnums adjacent?
-#then, print record
+
+#remove hits from other list
+#delete anything with an insertion code
