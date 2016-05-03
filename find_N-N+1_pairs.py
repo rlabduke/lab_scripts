@@ -13,10 +13,10 @@ with open(filename) as f:
     for SSBOND in f:
         #just skip if insertion codes involved
         space = " "
-        icode1 = SSBOND[31]
-        icode2 = SSBOND[45]
+        icode1 = SSBOND[30]
+        icode2 = SSBOND[44]
         if (icode1 != space) or (icode2 != space):
-            print icode1, "icodespacer", icode2
+            #print icode1, "icodespacer", icode2
             continue
         chain1=SSBOND[24]
         chain2=SSBOND[38]
@@ -30,6 +30,7 @@ with open(filename) as f:
             #print resn1, "resnspacer", resn2
             if (resn1+1) == resn2:
                 print SSBOND.rstrip()
+                #pass
 
 
 #remove hits from other list
