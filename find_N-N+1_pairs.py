@@ -36,6 +36,15 @@ with open(filename) as f:
                 print all_NNp1[-1]
                 #pass
 
+#print all_NNp1
 
 #remove hits from other list
-#delete anything with an insertion code
+#This is NOT a performance-focused method for doing this (sets would be faster)
+skips = open("ccc_skip_list.csv").readlines()
+
+#print skips
+
+for SS in all_NNp1:
+    pdb=SS.split()[0][0:4].upper() #This provides just the PDB line, as 3SIO or similar
+    #print pdb
+
