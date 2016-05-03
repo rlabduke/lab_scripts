@@ -7,6 +7,9 @@
 #Note this is fixed width
 #Note that an insertion code MAY occur, so we are processing as fixed-width
 
+
+all_NNp1 = []
+
 #read file (from arg?  hardcode)
 filename = "all_ssbond_recs.proc.txt"
 with open(filename) as f:
@@ -29,7 +32,8 @@ with open(filename) as f:
             resn2=int(SSBOND[40:44])
             #print resn1, "resnspacer", resn2
             if (resn1+1) == resn2:
-                print SSBOND.rstrip()
+                all_NNp1.append(SSBOND.rstrip())
+                print all_NNp1[-1]
                 #pass
 
 
