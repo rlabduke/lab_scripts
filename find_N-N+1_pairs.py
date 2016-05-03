@@ -33,7 +33,7 @@ with open(filename) as f:
             #print resn1, "resnspacer", resn2
             if (resn1+1) == resn2:
                 all_NNp1.append(SSBOND.rstrip())
-                print all_NNp1[-1]
+                #print all_NNp1[-1]
                 #pass
 
 #print all_NNp1
