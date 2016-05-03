@@ -63,3 +63,5 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 *~
+ccc_skip.csv
+ccc_skip_list.csv

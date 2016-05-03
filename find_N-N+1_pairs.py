@@ -11,6 +11,13 @@
 filename = "all_ssbond_recs.proc.txt"
 with open(filename) as f:
     for SSBOND in f:
+        #just skip if insertion codes involved
+        space = " "
+        icode1 = SSBOND[31]
+        icode2 = SSBOND[45]
+        if (icode1 != space) or (icode2 != space):
+            print icode1, "icodespacer", icode2
+            continue
         chain1=SSBOND[24]
         chain2=SSBOND[38]
         #print chain1, "chainspacer", chain2
