@@ -47,4 +47,10 @@ skips = open("ccc_skip_list.csv").readlines()
 for SS in all_NNp1:
     pdb=SS.split()[0][0:4].upper() #This provides just the PDB line, as 3SIO or similar
     #print pdb
-
+    inskips = False
+    for skippdb in skips:
+        if skippdb.rstrip() == pdb:
+            inskips = True
+            continue
+    if not inskips:
+        print SS
