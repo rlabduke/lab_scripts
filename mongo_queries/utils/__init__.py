@@ -123,9 +123,9 @@ class MongoResidue(object) :
   def as_str(self,noalt=False) :
     if noalt :
       return ' '.join([self.pdb_id,self.model_id,self.chain_id,
-                     self.icode,self.resseq,self.resname])
+                       self.resseq,self.icode,self.resname])
     return ' '.join([self.pdb_id,self.model_id,self.chain_id,
-                     self.icode,self.resseq,self.altloc,self.resname])
+                     self.altloc,self.resseq,self.icode,self.resname])
 
   def next_residue_key_list(self) :
     if 'cablam' not in self.raw_mongodoc.keys() : return
@@ -176,6 +176,13 @@ class MongoResidue(object) :
     if 'omegalyze' not in self.raw_mongodoc.keys() : return
     self.omegalyze = group_args(**self.raw_mongodoc['omegalyze'])
 
+  def get_atom_xyz(self, atom) :
+    assert isinstance(atom,str)
+    if not 'atoms' in self.raw_mongodoc.keys() : return
+    atoms = self.raw_mongodoc['atoms']
+    if not atom in atoms.keys() : return
+    return atoms[atom]["xyz"]
+
 class MongoResidueList(dict) :
 
   def __init__(self, pdb_id, chain=None) :
@@ -196,6 +203,15 @@ class MongoResidueList(dict) :
       #if not self[r['_id']].has_density_parameters(): continue
       #print self[r['_id']],self[r['_id']].paases_filter()#,self[r['_id']].next_residue()
       #break
+
+  def get_resolution(self, db=None) :
+    if not db : db = connect(db='pdb_info')
+    q = {"_id.pdb_id":self.pdb_id.upper()}
+    p = {"resolution":1}
+    cursor = db.experiment.find(q,p)
+    assert cursor.count() == 1
+    if "resolution" not in cursor[0].keys() : return
+    return cursor[0]["resolution"]
 
   def ordered_keys(self) :
     keys = self.keys()
