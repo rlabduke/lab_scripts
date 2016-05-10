@@ -15,6 +15,10 @@ def print_json_pretty(d,log=sys.stdout) :
   except :
     print >> log, 'Could not print json document'
 
+def broadcast(message,log=sys.stderr) :
+  print >> log, "*"*79 + '\n'
+  print >> log, "%s" % message
+  print >> log, "\n" + "*"*79
 
 def broadcast_query(query,collection,n=None,project=None,log=sys.stderr) :
   assert type(query) == dict
