@@ -16,8 +16,10 @@ def get_cystines(residues, db) :
 
 class CysCys(list) :
 
-  def add_cyscys(self,cys0,cys1,resolution) :
-    self.append({'res0':cys0,'res1':cys1,'resolution':resolution})
+  def add_cyscys(self,cys0,cys1,resolution,residue_n) :
+    self.append({'res0':cys0,'res1':cys1,
+                 'resolution':resolution,
+                 'residue_n':residue_n})
 
   def SG_SG_distanced(self,c0,c1) :
     a = numpy.array(c0.get_atom_xyz("SG"))
@@ -26,14 +28,17 @@ class CysCys(list) :
 
   def write_csv(self,omegatype=None,log=sys.stdout) :
     assert omegatype in [None,'Cis','Trans']
-    heads = ['residue0','residue1','resolution','omega','omega_type','SG-SG']
+    heads = ['residue0','passes_filter0','residue1','passes_filter1']
+    heads+= ['resolution','chain_aa_n','omega','omega_type','SG-SG']
     if len(self) == 0 :
       print >> sys.stderr, "No CysCys here!"
     else :
       print >> log, ','.join(heads)
       for d in self :
         res0 = d['res0'].as_str()
+        p0 = d['res0'].passes_filter()
         res1 = d['res1'].as_str()
+        p1 = d['res1'].passes_filter()
         #print utils.print_json_pretty(c1.raw_mongodoc)
         if hasattr(d['res1'],'omegalyze') :
           ot = d['res1'].omegalyze.type
@@ -42,7 +47,7 @@ class CysCys(list) :
         reso = "%.2f" % d['resolution']
         # Get SG-SG distance
         dist = "%.2f" % self.SG_SG_distanced(d['res0'],d['res1'])
-        lst = [res0,res1,reso,omega,ot,dist]
+        lst = [res0,p0,res1,p1,reso,d['residue_n'],omega,ot,dist]
         assert len(lst) == len(heads)
         print >> log, ','.join([str(e) for e in lst])
 
@@ -70,6 +75,8 @@ def run(args) :
   # Get connection to mongo
   mongocon = utils.MongodbConnection()
 
+  pdbs = ['3edh','2z63','2z66','3zui','4mge','3sr3','2q3z','3dst',
+          '3dsu','1wd3','3h0t','3h0u','4nn5','4nf4','3hol','3t6q']
   # iterate through pdbs
   cc = CysCys()
   for i,pdb_id in enumerate(pdbs) :
@@ -91,8 +98,10 @@ def run(args) :
       if len(precedes) == 0 : continue
       # get resolution
       resolution = residues.get_resolution(db=mongocon.db)
+      # get number of residues
+      residue_n = utils.get_num_aas_in_chain(pdb_id,cys.chain_id,db=mongocon.db)
       # add the cyscys
-      for res in precedes : cc.add_cyscys(res,cys,resolution)
+      for res in precedes : cc.add_cyscys(res,cys,resolution,residue_n)
     if args.verbose :
       s = '%i adjacent cystines found in %s'
       utils.broadcast(s % (len(precedes),pdb_id))

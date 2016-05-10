@@ -76,6 +76,15 @@ class MongodbConnection(object) :
     assert hasattr(client,self.db_name), '%s not on daneel'  % self.db_name
     self.db = getattr(client,self.db_name)
 
+def get_num_aas_in_chain(pdb_id,chain,db) :
+  q = {'pdb_id':pdb_id,'chain_id':chain}
+  p = {'resname':1}
+  cursor = db.residues_colkeys.find(q,p)
+  i = 0
+  for res in cursor :
+    if res['resname'] in reslist : i += 1
+  return i
+
 def get_filtered_pdbs(high_resolution,
                       connection=None,
                       limit=None,
@@ -143,7 +152,7 @@ class MongoResidue(object) :
   def deposit_prev_residue(self,prevres) :
     if not prevres in self.prevres : self.prevres.append(prevres)
 
-  def set_filter_thresholds(self,rscc=0.71,mapvalue=1.1,adp=40) :
+  def set_filter_thresholds(self,rscc=0.7,mapvalue=1.1,adp=40) :
     self.rscc_threshold     = rscc
     self.mapvalue_threshold = mapvalue
     self.adp_threshold      = adp
@@ -154,14 +163,6 @@ class MongoResidue(object) :
   def passes_filter(self,region='all') :
     assert region in ['all','sc','bb']
     worstregion = 'worst_%s' % region
-    if self.resseq == 105 :
-      print worstregion
-      print self.raw_mongodoc[worstregion]['twoFo_DFc_value']['value']
-      print self.mapvalue_threshold
-      print self.raw_mongodoc[worstregion]['adp']['value']
-      print self.adp_threshold
-      print self.raw_mongodoc[worstregion]['rscc']['value']
-      print self.rscc_threshold
     assert self.has_density_parameters(region=region)
     if 'twoFo_DFc_value' not in self.raw_mongodoc[worstregion] : return False
     if self.raw_mongodoc[worstregion]['twoFo_DFc_value']['value'] < \

@@ -1,3 +1,4 @@
 mongo_queries/creds.json
 *.pyc
 *.swp
+*.csv
