@@ -8,11 +8,100 @@ class NonProCis(list) :
 
   def add_nonprocis(self) : pass
 
+class Omega(object) :
+
+  def __init__(self,mr0,mr1,resolution) :
+    assert isinstance(mr0,utils.MongoResidue)
+    assert isinstance(mr1,utils.MongoResidue)
+    self.residue0 = mr0
+    self.residue1 = mr1
+    self.resname = mr1.resname
+    self.resolution = resolution
+    self.residue0_passes_filter = self.residue0.passes_filter(region='bb')
+    self.residue1_passes_filter = self.residue1.passes_filter(region='bb')
+    self.omega = self.residue1.omegalyze.omega
+    self.omega_type = self.residue1.omegalyze.type
+
+  def get_phipsi(self,num) :
+    assert num in [0,1], num
+    res = getattr(self,'residue%i' % num)
+    if not hasattr(res,'ramalyze') : return None,None
+    return res.ramalyze.phi, res.ramalyze.psi
+
+  def passes_filter(self) :
+    return self.residue0_passes_filter and self.residue1_passes_filter
+
+  def as_csv(self,withheads=False,log=sys.stdout) :
+    heads = ['res0','res0_pass_filter','res1','res1_pass_filter']
+    heads+= ['resolution','omega','omega_type','phi0','psi0','phi1','psi1']
+    phi0,phsi0 = self.get_phipsi(0)
+    phi1,phsi1 = self.get_phipsi(1)
+    if withheads : print >> log, ','.join(heads)
+    l = [self.residue0.as_str(),self.residue0_passes_filter]
+    l+= [self.residue1.as_str(),self.residue1_passes_filter]
+    l+= [self.resolution,self.omega,self.omega_type]
+    l+= [phi0,phsi0,phi1,phsi1]
+    ls = []
+    for e in l :
+      if e == None : ls.append("None")
+      elif isinstance(e,float) : ls.append('%.2f' % e)
+      elif isinstance(e,bool) : ls.append(str(e))
+      else : ls.append(e)
+    print >> log, ','.join(ls)
+
+class Omegas(object) :
+
+  def __init__(self,pdb_id,chain,db) :
+    self.pdb_id = pdb_id
+    self.chain = chain
+    self.db = db
+    self.omegas = []
+    self.set_omegas()
+
+  def __len__(self) : return len(self.omegas)
+
+  def append(self,omega) :
+    assert isinstance(omega,Omega)
+    self.omegas.append(omega)
+
+  def set_omegas(self) :
+    residues = utils.MongoResidueList(db     = self.db,
+                                      pdb_id = self.pdb_id,
+                                      chain  = self.chain)
+    self.resolution = residues.get_resolution()
+    # iterate through residues
+    keys = residues.ordered_keys()
+    for k in keys :
+      mongores = residues[k]
+      # Skip if omegalyze doesn't exists.
+      if not hasattr(mongores,'omegalyze') : continue
+      for pres in mongores.prevres :
+        self.append(Omega(pres,mongores,self.resolution))
+        #print type(mongores),type(pres)
+      # Does it pass filters
+      #break
+
+  def write_csv(self,log=sys.stdout) :
+    whead = True
+    for i,omega in enumerate(self.omegas) :
+      omega.as_csv(withheads=whead,log=log)
+      if i == 0 : whead = False
+
 def has_non_pro_cis(pdb_id,chain,db) :
   q = {"pdb_id":pdb_id,"chain":chain,"resname":{"$ne":"PRO"}}
   q["omegalyze.type"] = "CIS"
   if db.residues_colkeys.count(q) == 0 : return False
   return True
+
+def get_cis_residues(residues) :
+  residue_keys = residues.ordered_keys()
+  npc_residues  = []
+  for reskey in residue_keys :
+    mongores = residues[reskey]
+    if not hasattr(mongores,'omegalyze') : continue
+    if mongores.omegalyze.type == "Cis" :
+      npc_residues.append(mongores)
+  return npc_residues
 
 def get_npc_residues(residues) :
   residue_keys = residues.ordered_keys()
@@ -20,7 +109,7 @@ def get_npc_residues(residues) :
   for reskey in residue_keys :
     mongores = residues[reskey]
     if not hasattr(mongores,'omegalyze') : continue
-    if mongores.omegalyze.type == "Cis" and mongores.resname != 'CYS' :
+    if mongores.omegalyze.type == "Cis" and mongores.resname != 'PRO' :
       npc_residues.append(mongores)
   return npc_residues
 
@@ -43,32 +132,36 @@ def run(args) :
   mongocon = utils.MongodbConnection()
 
   # Iterate through pdbs
-  counts = {"all_aa":{'n_unique':0,'n_alts':0,'passfilter':0,'alt_passfilter':0},
-          "pro":{'n_unique':0,'n_alts':0,'passfilter':0,'alt_passfilter':0},
-          "cispro":{'n_unique':0,'n_alts':0,'passfilter':0,'alt_passfilter':0},
-          "nonpro":{'n_unique':0,'n_alts':0,'passfilter':0,'alt_passfilter':0},
-          "nonprocis":{'n_unique':0,'n_alts':0,'passfilter':0,'alt_passfilter':0}}
+  counts = {"all_aa":
+            {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
+          "cis":
+            {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
+          "pro":
+            {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
+          "cispro":
+            {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
+          "nonpro":
+            {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
+          "nonprocis":
+            {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0}}
   nonprocis = NonProCis()
   for i,pc in enumerate(pdbs) :
     if i % 100 == 0 : print >> sys.stderr, "Through %i of %i.." % (i,len(pdbs))
     pdb_id,chain = pc
     pdb_id,chain = "193l","A"
-    # get number of canonical aas in given pdb_chain
-    counts['all_aa']['n_unique'] += utils.get_num_aas_in_chain(pdb_id,chain,mongocon.db)
-    print counts['all_aa']['n_unique']
-    residues = utils.MongoResidueList(db=mongocon.db, pdb_id=pdb_id, chain=chain)
-    print residues.counts.unique_canonical_aa
-    print residues.counts.unique_canonical_aa_filter
-    print residues.counts.all_canonical_aa
-    print residues.counts.all_canonical_aa_filter
+    omegas = Omegas(pdb_id,chain,db=mongocon.db)
+    omegas.write_csv()
     break
-    # skip if there are no non-pro cis in pdb_id,chain
-    if not has_non_pro_cis(pdb_id,chain,mongocon.db) : continue
+    # get all_aa counts
+    #counts['all_aa']['n_unique'] += residues.counts.unique_canonical_aa
+    #counts['all_aa']['n_unique_filter'] += \
+    #                 residues.counts.unique_canonical_aa_filter
+    #counts['all_aa']['n_alts'] += residues.counts.all_canonical_aa
+    #counts['all_aa']['n_alts_filter'] += residues.counts.all_canonical_aa_filter
     # get non-pro cis residues
-    residues = utils.MongoResidueList(db=mongocon.db,pdb_id=pdb_id, chain=chain)
-    npc_residues = get_npc_residues(residues)
+    #cis_residues = get_cis_residues(residues)
     # Sanity check
-    assert len(npc_residues) > 0
+    #assert len(cis_residues) > 0
     
     if i > 5 : break
 

@@ -140,6 +140,7 @@ class MongoResidue(object) :
     self.prevres  = []
     self.set_filter_thresholds()
     self.set_omega()
+    self.set_rama()
 
   def __str__(self) :
     return self.as_str()
@@ -192,6 +193,10 @@ class MongoResidue(object) :
     if 'omegalyze' not in self.raw_mongodoc.keys() : return
     self.omegalyze = group_args(**self.raw_mongodoc['omegalyze'])
 
+  def set_rama(self) :
+    if 'ramalyze' not in self.raw_mongodoc.keys() : return
+    self.ramalyze = group_args(**self.raw_mongodoc['ramalyze'])
+
   def get_atom_xyz(self, atom) :
     assert isinstance(atom,str)
     if not 'atoms' in self.raw_mongodoc.keys() : return
@@ -230,11 +235,10 @@ class MongoResidueList(dict) :
       #print self[r['_id']],self[r['_id']].paases_filter()#,self[r['_id']].next_residue()
       #break
 
-  def get_resolution(self, db=None) :
-    if not db : db = connect(db='pdb_info')
+  def get_resolution(self) :
     q = {"_id.pdb_id":self.pdb_id.upper()}
     p = {"resolution":1}
-    cursor = db.experiment.find(q,p)
+    cursor = self.db.experiment.find(q,p)
     assert cursor.count() == 1
     if "resolution" not in cursor[0].keys() : return
     return cursor[0]["resolution"]
