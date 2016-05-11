@@ -76,14 +76,19 @@ class MongodbConnection(object) :
     assert hasattr(client,self.db_name), '%s not on daneel'  % self.db_name
     self.db = getattr(client,self.db_name)
 
-def get_num_aas_in_chain(pdb_id,chain,db) :
+def get_num_aas_in_chain(pdb_id,chain,db,return_both_unique_alt=False) :
   q = {'pdb_id':pdb_id,'chain_id':chain}
-  p = {'resname':1}
+  p = {"chain_id":1,"resseq":1,'resname':1,"icode":1,'altloc':1}
   cursor = db.residues_colkeys.find(q,p)
   i = 0
-  for res in cursor :
-    if res['resname'] in reslist : i += 1
-  return i
+  resl = []
+  for d in cursor :
+    if d['resname'] in reslist :
+      i += 1
+      s = ''.join([d["chain_id"],str(d["resseq"]),d['resname'],d["icode"]])
+      if s not in resl : resl.append(s)
+  if return_both_unique_alt : return len(resl),i
+  return len(resl)
 
 def get_filtered_pdbs(high_resolution,
                       connection=None,
@@ -106,6 +111,16 @@ def get_filtered_pdbs(high_resolution,
   if verbose :
     broadcast_query(query= qd,collection='experiment',n=len(pdbs),project=pd)
   return pdbs
+
+def get_Top8000_pdb_list(homology_level=70,verbose=False) :
+  assert homology_level in [50,70,90,95]
+  q = {"in_mtz_%i"%homology_level:1}
+  # we only want pdb_id and chain
+  p = {"pdb_id":1,"chain":1}
+  mongocon = MongodbConnection(db_name='top8000_rota_data')
+  cursor = mongocon.db.versions_2.find(q,p)
+  if verbose : print >> sys.stderr, 'fetched %i PDB-chains.' % cursor.count()
+  return [(e["pdb_id"],e["chain"]) for e in cursor]
 
 class MongoResidue(object) :
 
@@ -184,18 +199,28 @@ class MongoResidue(object) :
     if not atom in atoms.keys() : return
     return atoms[atom]["xyz"]
 
+  def lowest_occ(self) :
+    lowest_occ = 1
+    atoms = self.raw_mongodoc['atoms']
+    for an,d in atoms.items() :
+      if d['occ'] < lowest_occ : lowest_occ = d['occ']
+    return lowest_occ
+
 class MongoResidueList(dict) :
 
-  def __init__(self, pdb_id, chain=None) :
+  def __init__(self, db, pdb_id, chain=None) :
     self.pdb_id = pdb_id.lower()
     self.chain = chain
+    self.db = db
+    self.get_residues()
+    self.link_residues()
+    #self.set_counts()
 
-  def get_residues(self, db=None, collection='residues_colkeys') :
-    if not db : db = connect(db='pdb_info')
+  def get_residues(self, collection='residues_colkeys') :
     q = {'pdb_id':self.pdb_id}
     if self.chain : q['chain_id'] = self.chain
-    assert hasattr(db,collection)
-    dbcol = getattr(db,collection)
+    assert hasattr(self.db,collection)
+    dbcol = getattr(self.db,collection)
     cursor = dbcol.find(q)
     for r in cursor :
       #print r
@@ -213,6 +238,25 @@ class MongoResidueList(dict) :
     assert cursor.count() == 1
     if "resolution" not in cursor[0].keys() : return
     return cursor[0]["resolution"]
+
+  def set_counts(self) :
+    self.counts = group_args(unique_canonical_aa = 0,
+                            all_canonical_aa = 0,
+                            unique_canonical_aa_filter = 0,
+                            all_canonical_aa_filter = 0)
+    keys = self.ordered_keys()
+    for k in keys :
+       mongores = self[k]
+       noalt = mongores.as_str(noalt=True)
+       if mongores.resname not in reslist : continue
+       if mongores.passes_filter(region='bb') : passes = True
+       else : passes = False
+       self.counts.all_canonical_aa += 1
+       if passes : self.counts.all_canonical_aa_filter += 1
+       if noalt not in canon :
+         self.counts.unique_canonical_aa += 1
+       if passes : 
+         self.counts.unique_canonical_aa_filter += 1*mongores.lowest_occ()
 
   def ordered_keys(self) :
     keys = self.keys()
