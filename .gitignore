@@ -1,4 +1,3 @@
-mongo_queries/creds.json
+.DS_Store
 *.pyc
 *.swp
-*.csv
