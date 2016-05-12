@@ -73,9 +73,11 @@ class Omegas(object) :
     keys = residues.ordered_keys()
     for k in keys :
       mongores = residues[k]
+      if mongores.resname not in utils.reslist : continue
       # Skip if omegalyze doesn't exists.
       if not hasattr(mongores,'omegalyze') : continue
       for pres in mongores.prevres :
+        if pres.resname not in utils.reslist : continue
         self.append(Omega(pres,mongores,self.resolution))
         #print type(mongores),type(pres)
       # Does it pass filters
@@ -88,10 +90,10 @@ class Omegas(object) :
       if i == 0 : whead = False
 
   def set_counts(self) :
-    self.counts = utils.group_args(all_omega_unique = 0,#
-                                   all_omega_alt = 0,#
-                                   all_omega_unique_filter = 0,#
-                                   all_omega_alt_filter = 0,#
+    self.counts = utils.group_args(all_omega_unique = 0,##
+                                   all_omega_alt = 0,##
+                                   all_omega_unique_filter = 0,##
+                                   all_omega_alt_filter = 0,##
                                    pro_unique = 0,#
                                    pro_alt = 0,#
                                    pro_unique_filter = 0,#
@@ -100,8 +102,8 @@ class Omegas(object) :
                                    cis_pro_alt = 0,#
                                    cis_pro_unique_filter = 0,#
                                    cis_pro_alt_filter = 0,#
-                                   nonpro_unique = 0,#
-                                   nonpro_alt = 0,#
+                                   nonpro_unique = 0,##
+                                   nonpro_alt = 0,##
                                    nonpro_unique_filter = 0,#
                                    nonpro_alt_filter = 0,#
                                    cis_nonpro_unique = 0,#
@@ -187,8 +189,8 @@ def get_npc_residues(residues) :
   return npc_residues
 
 def run(args) :
-  desc = "A query script to getnon-pro cis residues from the Top8000 at a given"
-  desc+= " homology level."
+  desc = "A query script to getnon-pro cis residues from the Top8000 at a "
+  desc+= "given homology level."
   parser = argparse.ArgumentParser(description=desc)
   parser.add_argument('-o','--homology_level', type=int,default=70,
                    help='Homology level can be 50, 70, 90, or 95. Default=70')
@@ -207,8 +209,6 @@ def run(args) :
   # Iterate through pdbs
   counts = {"all_omega":
             {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
-          "cis":
-            {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
           "pro":
             {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
           "cispro":
@@ -221,20 +221,32 @@ def run(args) :
   for i,pc in enumerate(pdbs) :
     if i % 100 == 0 : print >> sys.stderr, "Through %i of %i.." % (i,len(pdbs))
     pdb_id,chain = pc
-    print "working on %s %s..." % (pdb_id,chain)
-    #pdb_id,chain = "193l","A"
+    #pdb_id,chain = "1avb","A"
+    if args.verbose : print "working on %s %s..." % (pdb_id,chain)
     omegas = Omegas(pdb_id,chain,db=mongocon.db)
     #omegas.write_csv()
     omegas.set_counts()
-    #print omegas.counts.all_omega_alt
-    #print omegas.counts.all_omega_alt_filter
-    #print omegas.counts.all_omega_unique
-    #print omegas.counts.all_omega_unique_filter
     counts['all_omega']['n_unique'] += omegas.counts.all_omega_unique
     counts['all_omega']['n_unique_filter'] +=\
                               omegas.counts.all_omega_unique_filter
     counts['all_omega']['n_alts'] += omegas.counts.all_omega_alt
     counts['all_omega']['n_alts_filter'] += omegas.counts.all_omega_alt_filter
+    counts['pro']['n_unique'] += omegas.counts.pro_unique
+    counts['pro']['n_alts'] += omegas.counts.pro_alt
+    counts['pro']['n_unique_filter'] += omegas.counts.pro_unique_filter
+    counts['pro']['n_alts_filter'] += omegas.counts.pro_alt_filter
+    counts['cispro']['n_unique'] += omegas.counts.cis_pro_unique
+    counts['cispro']['n_alts'] += omegas.counts.cis_pro_alt
+    counts['cispro']['n_unique_filter'] += omegas.counts.cis_pro_unique_filter
+    counts['cispro']['n_alts_filter'] += omegas.counts.cis_pro_alt_filter
+    counts['nonpro']['n_unique'] += omegas.counts.nonpro_unique
+    counts['nonpro']['n_alts'] += omegas.counts.nonpro_alt
+    counts['nonpro']['n_unique_filter'] += omegas.counts.nonpro_unique_filter
+    counts['nonpro']['n_alts_filter'] += omegas.counts.nonpro_alt_filter
+    counts['nonprocis']['n_unique'] += omegas.counts.cis_nonpro_unique
+    counts['nonprocis']['n_alts'] += omegas.counts.cis_nonpro_alt
+    counts['nonprocis']['n_unique_filter'] += omegas.counts.cis_nonpro_unique_filter
+    counts['nonprocis']['n_alts_filter'] += omegas.counts.cis_nonpro_alt_filter
     # get all_aa counts
     #counts['all_aa']['n_unique'] += residues.counts.unique_canonical_aa
     #counts['all_aa']['n_unique_filter'] += \
@@ -245,13 +257,74 @@ def run(args) :
     #cis_residues = get_cis_residues(residues)
     # Sanity check
     #assert len(cis_residues) > 0
-    
-    if i > 5 : break
+    #break
+    #if i > 15 : break
 
-  print counts['all_omega']['n_unique']
-  print counts['all_omega']['n_unique_filter']
-  print counts['all_omega']['n_alts']
-  print counts['all_omega']['n_alts_filter']
+  print "In %i pdbs there were :" % i
+  s = ': all omegas unique'
+  v = '%i' % counts['all_omega']['n_unique']
+  print v.ljust(10), s
+  s = ': all omegas unique filter'
+  v = '%.3f' % counts['all_omega']['n_unique_filter']
+  print v.ljust(10), s
+  s = ': all omegas alts'
+  v = '%i' % counts['all_omega']['n_alts']
+  print v.ljust(10), s
+  s = ': all omegas alts filter'
+  v = '%i' % counts['all_omega']['n_alts_filter']
+  print v.ljust(10), s
+
+  s = ': pro unique'
+  v = '%i' % counts['pro']['n_unique']
+  print v.ljust(10), s
+  s = ': pro unique filter'
+  v = '%.3f' % counts['pro']['n_unique_filter']
+  print v.ljust(10), s
+  s = ': pro alts'
+  v = '%i' % counts['pro']['n_alts']
+  print v.ljust(10), s
+  s = ': pro alts filter'
+  v = '%i' % counts['pro']['n_alts_filter']
+  print v.ljust(10), s
+
+  s = ': cispro unique'
+  v = '%i' % counts['cispro']['n_unique']
+  print v.ljust(10), s
+  s = ': cispro unique filter'
+  v = '%.3f' % counts['cispro']['n_unique_filter']
+  print v.ljust(10), s
+  s = ': cispro alts'
+  v = '%i' % counts['cispro']['n_alts']
+  print v.ljust(10), s
+  s = ': cispro alts filter'
+  v = '%i' % counts['cispro']['n_alts_filter']
+  print v.ljust(10), s
+
+  s = ': nonpro unique'
+  v = '%i' % counts['nonpro']['n_unique']
+  print v.ljust(10), s
+  s = ': nonpro unique filter'
+  v = '%.3f' % counts['nonpro']['n_unique_filter']
+  print v.ljust(10), s
+  s = ': nonpro alts'
+  v = '%i' % counts['nonpro']['n_alts']
+  print v.ljust(10), s
+  s = ': nonpro alts filter'
+  v = '%i' % counts['nonpro']['n_alts_filter']
+  print v.ljust(10), s
+
+  s = ': nonprocis unique'
+  v = '%i' % counts['nonprocis']['n_unique']
+  print v.ljust(10), s
+  s = ': nonprocis unique filter'
+  v = '%.3f' % counts['nonprocis']['n_unique_filter']
+  print v.ljust(10), s
+  s = ': nonprocis alts'
+  v = '%i' % counts['nonprocis']['n_alts']
+  print v.ljust(10), s
+  s = ': nonprocis alts filter'
+  v = '%i' % counts['nonprocis']['n_alts_filter']
+  print v.ljust(10), s
 
 if __name__ == '__main__' :
   run(sys.argv[1:])

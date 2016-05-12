@@ -179,7 +179,8 @@ class MongoResidue(object) :
   def passes_filter(self,region='all') :
     assert region in ['all','sc','bb']
     worstregion = 'worst_%s' % region
-    assert self.has_density_parameters(region=region)
+    #assert self.has_density_parameters(region=region), self.as_str()
+    if not self.has_density_parameters(region=region) : return False
     if 'twoFo_DFc_value' not in self.raw_mongodoc[worstregion] : return False
     if self.raw_mongodoc[worstregion]['twoFo_DFc_value']['value'] < \
             self.mapvalue_threshold : return False
@@ -239,7 +240,7 @@ class MongoResidueList(dict) :
     q = {"_id.pdb_id":self.pdb_id.upper()}
     p = {"resolution":1}
     cursor = self.db.experiment.find(q,p)
-    assert cursor.count() == 1
+    if cursor.count() == 0 : return 0
     if "resolution" not in cursor[0].keys() : return
     return cursor[0]["resolution"]
 
