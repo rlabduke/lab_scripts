@@ -87,6 +87,79 @@ class Omegas(object) :
       omega.as_csv(withheads=whead,log=log)
       if i == 0 : whead = False
 
+  def set_counts(self) :
+    self.counts = utils.group_args(all_omega_unique = 0,#
+                                   all_omega_alt = 0,#
+                                   all_omega_unique_filter = 0,#
+                                   all_omega_alt_filter = 0,#
+                                   pro_unique = 0,#
+                                   pro_alt = 0,#
+                                   pro_unique_filter = 0,#
+                                   pro_alt_filter = 0,#
+                                   cis_pro_unique = 0,#
+                                   cis_pro_alt = 0,#
+                                   cis_pro_unique_filter = 0,#
+                                   cis_pro_alt_filter = 0,#
+                                   nonpro_unique = 0,#
+                                   nonpro_alt = 0,#
+                                   nonpro_unique_filter = 0,#
+                                   nonpro_alt_filter = 0,#
+                                   cis_nonpro_unique = 0,#
+                                   cis_nonpro_alt = 0,#
+                                   cis_nonpro_unique_filter = 0,#
+                                   cis_nonpro_alt_filter = 0,#
+                                   )
+    uniqes = []
+    uniqes_filter = []
+    for omega in self.omegas :
+      noalt = omega.residue1.as_str(noalt=True)
+      passes = omega.passes_filter()
+      occ = omega.residue1.lowest_occ()
+      # ispro
+      if omega.residue1.resname == 'PRO' : ispro = True
+      else : ispro = False
+      # iscis
+      if omega.residue1.omegalyze.type == "Cis" : iscis = True
+      else : iscis = False
+      # start couting
+      self.counts.all_omega_alt += 1
+      if passes :
+        self.counts.all_omega_alt_filter += 1
+        self.counts.all_omega_unique_filter += 1*occ
+      if ispro :
+        self.counts.pro_alt += 1
+        if passes :
+          self.counts.pro_alt_filter += 1
+          self.counts.pro_unique_filter += 1*occ
+      else :
+        self.counts.nonpro_alt += 1
+        if passes :
+          self.counts.nonpro_alt_filter += 1
+          self.counts.nonpro_unique_filter += 1*occ
+      # cis stuff
+      if iscis :
+        if ispro :
+          self.counts.cis_pro_alt += 1
+          if passes :
+            self.counts.cis_pro_alt_filter += 1
+            self.counts.cis_pro_unique_filter += 1*occ
+        else :
+          self.counts.cis_nonpro_alt += 1
+          if passes :
+            self.counts.cis_nonpro_alt_filter += 1
+            self.counts.cis_nonpro_unique_filter += 1*occ
+        
+      # is it uniqe?
+      if noalt not in uniqes :
+        uniqes.append(noalt)
+        self.counts.all_omega_unique += 1
+        if ispro :
+          self.counts.pro_unique += 1
+          if iscis : self.counts.cis_pro_unique += 1
+        else :
+          self.counts.nonpro_unique += 1
+          if iscis : self.counts.cis_nonpro_unique += 1
+
 def has_non_pro_cis(pdb_id,chain,db) :
   q = {"pdb_id":pdb_id,"chain":chain,"resname":{"$ne":"PRO"}}
   q["omegalyze.type"] = "CIS"
@@ -132,7 +205,7 @@ def run(args) :
   mongocon = utils.MongodbConnection()
 
   # Iterate through pdbs
-  counts = {"all_aa":
+  counts = {"all_omega":
             {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
           "cis":
             {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
@@ -148,10 +221,20 @@ def run(args) :
   for i,pc in enumerate(pdbs) :
     if i % 100 == 0 : print >> sys.stderr, "Through %i of %i.." % (i,len(pdbs))
     pdb_id,chain = pc
-    pdb_id,chain = "193l","A"
+    print "working on %s %s..." % (pdb_id,chain)
+    #pdb_id,chain = "193l","A"
     omegas = Omegas(pdb_id,chain,db=mongocon.db)
-    omegas.write_csv()
-    break
+    #omegas.write_csv()
+    omegas.set_counts()
+    #print omegas.counts.all_omega_alt
+    #print omegas.counts.all_omega_alt_filter
+    #print omegas.counts.all_omega_unique
+    #print omegas.counts.all_omega_unique_filter
+    counts['all_omega']['n_unique'] += omegas.counts.all_omega_unique
+    counts['all_omega']['n_unique_filter'] +=\
+                              omegas.counts.all_omega_unique_filter
+    counts['all_omega']['n_alts'] += omegas.counts.all_omega_alt
+    counts['all_omega']['n_alts_filter'] += omegas.counts.all_omega_alt_filter
     # get all_aa counts
     #counts['all_aa']['n_unique'] += residues.counts.unique_canonical_aa
     #counts['all_aa']['n_unique_filter'] += \
@@ -164,6 +247,11 @@ def run(args) :
     #assert len(cis_residues) > 0
     
     if i > 5 : break
+
+  print counts['all_omega']['n_unique']
+  print counts['all_omega']['n_unique_filter']
+  print counts['all_omega']['n_alts']
+  print counts['all_omega']['n_alts_filter']
 
 if __name__ == '__main__' :
   run(sys.argv[1:])
