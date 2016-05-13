@@ -39,7 +39,8 @@ def get_creds_fn() :
     candidate = os.path.join(dirname, 'creds.json')
     if os.path.isfile(candidate):
       return candidate
-  raise RuntimeError("Can't find file creds.json")
+  #raise RuntimeError("Can't find file creds.json")
+  return None
 
 def get_creds(user=None) :
   fn = get_creds_fn()
