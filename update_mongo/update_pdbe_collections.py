@@ -98,6 +98,7 @@ def run(args) :
   else : factor = 100
   print >> sys.stderr, '\n\nBegin iterating missing pdbs...\n'
   msg = '\n%i records inserted - %.2f %% done.\n'
+  i = 0
   for i,pdb_id in enumerate(missing) :
     if args.verbose : print >> sys.stderr, "working on %s..." % pdb_id
     # get the given pdb's document from the PDBe
