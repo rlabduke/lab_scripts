@@ -44,7 +44,7 @@ def get_creds_fn() :
 
 def get_creds(user=None) :
   fn = get_creds_fn()
-  if os.path.exists(fn) :
+  if fn and os.path.exists(fn) :
     fle=open(fn,'r')
     d=json.load(fle)
     fle.close()

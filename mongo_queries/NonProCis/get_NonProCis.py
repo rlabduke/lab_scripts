@@ -31,6 +31,10 @@ class Omega(object) :
   def passes_filter(self) :
     return self.residue0_passes_filter and self.residue1_passes_filter
 
+  def is_non_pro_cis(self) :
+    if self.resname != 'PRO' and self.omega_type == 'Cis' : return True
+    else : return False
+
   def as_csv(self,withheads=False,log=sys.stdout) :
     heads = ['res0','res0_pass_filter','res1','res1_pass_filter']
     heads+= ['resolution','omega','omega_type','phi0','psi0','phi1','psi1']
@@ -45,7 +49,7 @@ class Omega(object) :
     for e in l :
       if e == None : ls.append("None")
       elif isinstance(e,float) : ls.append('%.2f' % e)
-      elif isinstance(e,bool) : ls.append(str(e))
+      elif isinstance(e,bool) or isinstance(e,int) : ls.append(str(e))
       else : ls.append(e)
     print >> log, ','.join(ls)
 
@@ -74,7 +78,7 @@ class Omegas(object) :
     for k in keys :
       mongores = residues[k]
       if mongores.resname not in utils.reslist : continue
-      # Skip if omegalyze doesn't exists.
+      # Skip : return False if omegalyze doesn't exists.
       if not hasattr(mongores,'omegalyze') : continue
       for pres in mongores.prevres :
         if pres.resname not in utils.reslist : continue
@@ -83,9 +87,10 @@ class Omegas(object) :
       # Does it pass filters
       #break
 
-  def write_csv(self,log=sys.stdout) :
-    whead = True
+  def write_csv(self,noncis_pro_only=True,log=sys.stdout) :
+    whead = False
     for i,omega in enumerate(self.omegas) :
+      if noncis_pro_only and not omega.is_non_pro_cis() : continue
       omega.as_csv(withheads=whead,log=log)
       if i == 0 : whead = False
 
@@ -206,6 +211,13 @@ def run(args) :
   # Get connection to mongo
   mongocon = utils.MongodbConnection()
 
+  # Set noncispro filename
+  ncp_fn = 'non_cis_pro_filtered_%i.csv' % args.homology_level
+  ncp_log = open(ncp_fn,'w')
+  heads = ['res0','res0_pass_filter','res1','res1_pass_filter']
+  heads+= ['resolution','omega','omega_type','phi0','psi0','phi1','psi1']
+  print >> ncp_log, ','.join(heads)
+
   # Iterate through pdbs
   counts = {"all_omega":
             {'n_unique':0,'n_alts':0,'n_unique_filter':0,'n_alts_filter':0},
@@ -221,10 +233,9 @@ def run(args) :
   for i,pc in enumerate(pdbs) :
     if i % 100 == 0 : print >> sys.stderr, "Through %i of %i.." % (i,len(pdbs))
     pdb_id,chain = pc
-    #pdb_id,chain = "1avb","A"
+    #pdb_id,chain = "1d3g","A"
     if args.verbose : print "working on %s %s..." % (pdb_id,chain)
     omegas = Omegas(pdb_id,chain,db=mongocon.db)
-    #omegas.write_csv()
     omegas.set_counts()
     counts['all_omega']['n_unique'] += omegas.counts.all_omega_unique
     counts['all_omega']['n_unique_filter'] +=\
@@ -247,6 +258,8 @@ def run(args) :
     counts['nonprocis']['n_alts'] += omegas.counts.cis_nonpro_alt
     counts['nonprocis']['n_unique_filter'] += omegas.counts.cis_nonpro_unique_filter
     counts['nonprocis']['n_alts_filter'] += omegas.counts.cis_nonpro_alt_filter
+    # write non-cis pro csv if they exist
+    if omegas.counts.cis_nonpro_unique_filter > 0 : omegas.write_csv(log=ncp_log)
     # get all_aa counts
     #counts['all_aa']['n_unique'] += residues.counts.unique_canonical_aa
     #counts['all_aa']['n_unique_filter'] += \
@@ -260,71 +273,77 @@ def run(args) :
     #break
     #if i > 15 : break
 
-  print "In %i pdbs there were :" % i
+  ncp_log.close()
+  print >> sys.stderr, '%s written.' % ncp_fn
+  re_fn = 'counts_%i.csv' % args.homology_level
+  re_log = open(re_fn,'w')
+  print >> re_log, "In %i pdbs there were :" % i
   s = ': all omegas unique'
   v = '%i' % counts['all_omega']['n_unique']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': all omegas unique filter'
   v = '%.3f' % counts['all_omega']['n_unique_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': all omegas alts'
   v = '%i' % counts['all_omega']['n_alts']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': all omegas alts filter'
   v = '%i' % counts['all_omega']['n_alts_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
 
   s = ': pro unique'
   v = '%i' % counts['pro']['n_unique']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': pro unique filter'
   v = '%.3f' % counts['pro']['n_unique_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': pro alts'
   v = '%i' % counts['pro']['n_alts']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': pro alts filter'
   v = '%i' % counts['pro']['n_alts_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
 
   s = ': cispro unique'
   v = '%i' % counts['cispro']['n_unique']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': cispro unique filter'
   v = '%.3f' % counts['cispro']['n_unique_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': cispro alts'
   v = '%i' % counts['cispro']['n_alts']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': cispro alts filter'
   v = '%i' % counts['cispro']['n_alts_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
 
   s = ': nonpro unique'
   v = '%i' % counts['nonpro']['n_unique']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': nonpro unique filter'
   v = '%.3f' % counts['nonpro']['n_unique_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': nonpro alts'
   v = '%i' % counts['nonpro']['n_alts']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': nonpro alts filter'
   v = '%i' % counts['nonpro']['n_alts_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
 
   s = ': nonprocis unique'
   v = '%i' % counts['nonprocis']['n_unique']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': nonprocis unique filter'
   v = '%.3f' % counts['nonprocis']['n_unique_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': nonprocis alts'
   v = '%i' % counts['nonprocis']['n_alts']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
   s = ': nonprocis alts filter'
   v = '%i' % counts['nonprocis']['n_alts_filter']
-  print v.ljust(10), s
+  print >> re_log, v.ljust(10), s
+  re_log.close()
+  print >> sys.stderr, '%s written.' % re_fn
 
 if __name__ == '__main__' :
   run(sys.argv[1:])
