@@ -104,6 +104,10 @@ def run(args) :
     # get the given pdb's document from the PDBe
     pdoc = pdbe_utils.PDBdoc(pdb_id)
     doc = pdoc.get_doc(args.collection)
+    if doc == None :
+      s = 'Skipping %s as no document was found - likely deprecated.'
+      print >> sys.stderr, s % pdb_id
+      continue
     #print doc
     #exit()
     if doc is None :

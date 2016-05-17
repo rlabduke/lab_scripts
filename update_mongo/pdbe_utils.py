@@ -57,6 +57,7 @@ class PDBdoc(object) :
     assert self.is_document_type(document_type)
     url = urls[document_type]
     pdbe_doc = get_request(url,self.pdb_id,pretty=True)
+    if pdbe_doc == None : return
     pdbe_json_doc = json.loads(pdbe_doc)
     return pdbe_json_doc
 
