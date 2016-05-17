@@ -66,3 +66,21 @@ class PDBdoc(object) :
     doc = self.get_doc(document_type)
     print >> log, json.dumps(doc,sort_keys=True,indent=4,
         separators=(',', ': '))
+
+class Cluster(object) :
+
+  def __init__(self,homology_level) :
+    assert homology_level in [95,90,70,50]
+    self.homology_level = homology_level
+
+  def get_raw_data(self) :
+    url = 'ftp://resources.rcsb.org/sequence/clusters/clusters%i.txt'
+    data = str(self.homology_level)
+    return make_request(url % self.homology_level,data)
+
+  def get_cluster_dict(self) :
+    rawdata = self.get_raw_data()
+    if rawdata == None : return
+    print type(rawdata)
+    sl = rawdata.splitlines()
+    print sl[:5]
