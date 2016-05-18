@@ -81,6 +81,12 @@ class Cluster(object) :
   def get_cluster_dict(self) :
     rawdata = self.get_raw_data()
     if rawdata == None : return
-    print type(rawdata)
     sl = rawdata.splitlines()
-    print sl[:5]
+    #print sl[:5]
+    d = {}
+    for l in sl :
+      cluster,rank,pdbchain = l.split('\t')
+      pdb_id,chain = pdbchain.split(':')
+      if cluster not in d.keys() : d[cluster] = []
+      d[cluster].append({'pdb_id':pdb_id,'chain':chain,'rank':rank})
+    return d
