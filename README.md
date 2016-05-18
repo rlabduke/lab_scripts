@@ -14,4 +14,7 @@ usage = '''process_t8000.py $listfile          Will go look for PDBS from that l
 Various lab related quaries to the MongoDB on daneel.
 
 # update_mongo
-Herein you will find scripts to update two databases in Mongo on datneel, experiment and summary. The data is retrieved from the PDBe API.
+Herein you will find scripts to update two databases in Mongo on daneel, experiment and summary. The data is retrieved from the PDBe API.
+
+#rsync_pdb
+This does not actually contain a script, but rather instructions on rsyncing the PDB
