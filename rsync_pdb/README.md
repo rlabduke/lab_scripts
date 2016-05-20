@@ -21,3 +21,12 @@ A list of all the files can be generated with:
 Pipe to a file to save it, or pipe through "sort -R" if you want them in random order for some reason.
 
 Note the odd file format: PDB supplies 1UBQ as "pdb1ubq.ent.gz", not 1UBQ.pdb.gz as might have been expected.  Also note the directory structure: the PDBs are organized into directores by the MIDDLE TWO characters of their 4-character label.
+
+
+
+
+
+
+As of Steven leaving the lab, the muscle mirrors are at /home/smlewis/Desktop/PDB_mirror and were updated.  Note the whole_PDB_as_FORMATgz pair (PDB and CIF) are the actual mirrors.  The one ending in CIF is gunzipped cifs and is months old, but may be useful for Steven so he left it.
+
+The scripts are at /home/smlewis/Desktop/PDB_mirror/rsync_pdb and were updated to reflect the current paths.
