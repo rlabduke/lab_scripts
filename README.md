@@ -18,3 +18,6 @@ Herein you will find scripts to update two databases in Mongo on daneel, experim
 
 #rsync_pdb
 This does not actually contain a script, but rather instructions on rsyncing the PDB
+
+#nonbonded_sym_contacts
+This script returns a list of nonbonded inter-asymmetric-unit interactions.
