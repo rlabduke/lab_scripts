@@ -134,8 +134,8 @@ def run(args) :
       dbcol.insert(mdoc)
       if args.verbose :
         print >> sys.stderr, '  %s inserted into pdb_info.%s' % (pdb_id,args.collection)
-      if i%factor == 0 : print >> sys.stderr, msg % (i,(i*100.0)/len(missing))
-    if i > 5 : break
+    if i%factor == 0 : print >> sys.stderr, msg % (i,(i*100.0)/len(missing))
+    #if i > 5 : break
   print >> sys.stderr, '\n\n%i total records inserted\n\n' % i
 
 if __name__ == '__main__' :
