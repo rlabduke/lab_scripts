@@ -70,7 +70,7 @@ def run(args) :
   parser.add_argument('-v','--verbose',help='Verbose outpur',
                       action='store_true')
   parser.add_argument('-t','--collection', type=str,
-                      help='experiment or summary',default='experiment')
+                   help='experiment (default) or summary',default='experiment')
   args = parser.parse_args()
   assert args.collection in ['experiment','summary']
 
