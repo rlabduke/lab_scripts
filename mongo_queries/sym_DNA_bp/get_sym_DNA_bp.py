@@ -6,7 +6,7 @@ import mongo_queries.utils
 from nonbonded_sym_contacts import get_nonbonded_sym_contacts
 
 default_resol = 2
-default_distance = 2.
+default_distance = 2.5
 
 def parseags() :
   desc = """This script is meant to identify DNA base pairs between asymmetric units. Give a specific pair to find, e.g. 
@@ -51,22 +51,47 @@ def run() :
   bases = ["A","T","G","C"]
   assert args.basepair[0] in bases and args.basepair[1] in bases,\
             args.basepair[0]
+  base1 = " D%s" % args.basepair[0]
+  base2 = " D%s" % args.basepair[1]
 
   print >> sys.stderr, "\nFinding %s..." % args.basepair
   # get pdbs with DNA and no RNA
   pdbs = get_dna_pdbs(args.resolution)
 
   # iterate through pdbs
-  for pdb_id in pdbs :
-    pdb_id = '3G6T'
+  thr = "Through %i - %.2f%%"
+  found = '%i pair[s] found in %s'
+  found_n = 0
+  for i,pdb_id in enumerate(pdbs) :
+    if i % 100 == 0 : print >> sys.stderr, thr % (i,(i*100.)/len(pdbs))
+    #pdb_id = '3G6Q'
     fn = fetch_pdb(pdb_id)
     if args.verbose : print >> sys.stderr, "Fetched %s" % fn
     reduced_pdb_file = get_nonbonded_sym_contacts.reduce_pdb(fn)
     pairs = get_nonbonded_sym_contacts.NonbondedIinteractions()
     pairs.get_nonbonded_interactions(file_name=reduced_pdb_file,
                                      distance_cutoff=args.distance_cutoff)
-    for pair in pairs  : print pair
-    break
+    residue_level_pairs = {}
+    for pair in pairs  :
+      rn1 = pair.residues[0].resname
+      rn2 = pair.residues[1].resname
+      if ( base1 == rn1 and base2 == rn2 ) or ( base1 == rn2 and base2 == rn1 ):
+        #print pair
+        key = (pdb_id,pair.residue_ids[0],pair.residue_ids[1])
+        if not key in residue_level_pairs.keys() : residue_level_pairs[key] = []
+        t = (pair.residues[0].name,pair.residues[1].name,'%.2f'%pair.distance)
+        residue_level_pairs[key].append(t) 
+    if len(residue_level_pairs) > 0 :
+      print >> sys.stderr, found % (len(residue_level_pairs),pdb_id)
+      found_n += len(residue_level_pairs)
+    for k,l in residue_level_pairs.items() :
+      print >> sys.stdout, k
+      for e in l : print >> sys.stdout, '    ' + str(e)
+    # cleanup
+    os.remove(fn)
+    os.remove(reduced_pdb_file)
+    #break
+  print >> sys.stderr, '%i TOTAL %s pair[s] found' % (found_n,args.basepair)
 
 if __name__ == "__main__" :
   run()

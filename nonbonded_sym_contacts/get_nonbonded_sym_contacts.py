@@ -6,6 +6,7 @@ from mmtbx.monomer_library import pdb_interpretation
 from libtbx import group_args
 from libtbx import easy_run
 import re
+import iotbx.pdb
 
 def parse_label(lab) :
   assert isinstance(lab,str),type(lab)
@@ -28,6 +29,7 @@ class nonbondedPair(object) :
        self.vdw_distance,self.sym_op_j,self.rt_mx=nonb
     self.scatterers = scatterers
     self.set_pair_labels(i_seq,j_seq)
+    self.set_residue_ids()
 
   def __str__(self) :
     return "%s - %.2f - %s"% \
@@ -37,6 +39,15 @@ class nonbondedPair(object) :
     ilab = parse_label(self.scatterers[i_seq].label)
     jlab = parse_label(self.scatterers[j_seq].label)
     self.residues = (ilab,jlab)
+
+  def get_residue_id(reslf,res) :
+    l = [res.alt_loc,res.resname,res.chain,res.resseq,res.icode]
+    return ":".join(l)
+
+  def set_residue_ids(self) :
+    r1 = self.get_residue_id(self.residues[0])
+    r2 = self.get_residue_id(self.residues[1])
+    self.residue_ids = (r1,r2)
 
 def reduce_pdb(pdb_file) :
   # returns the new filename
@@ -63,17 +74,30 @@ class NonbondedIinteractions(list) :
     if chem_data is not None:
       mon_lib_srv = monomer_library.server.server()
       ener_lib = monomer_library.server.ener_lib()
+    # get NA selection
+    pdb_inp = iotbx.pdb.input(file_name=file_name)
+    pdb_hierarchy = pdb_inp.construct_hierarchy()
+    asc = pdb_hierarchy.atom_selection_cache()
+    selection = asc.selection("nucleotide")
+    pdb_hierarchy = pdb_hierarchy.select(selection)
+    pdb_hierarchy.atoms().reset_i_seq()
     # processed pdb file
     pdb_processed_file = pdb_interpretation.process(
-      file_name=file_name,
+      #file_name=file_name,
+      pdb_inp=pdb_hierarchy.as_pdb_input(),
       mon_lib_srv=mon_lib_srv,
       ener_lib=ener_lib,
+      crystal_symmetry=pdb_inp.crystal_symmetry(),
       force_symmetry = True)
+    #print dir(pdb_processed_file)
+    #exit()
     # get grm
     grm = pdb_processed_file.geometry_restraints_manager(
+      hard_minimum_nonbonded_distance=0,
       show_energies = False,
       plain_pairs_radius = 5.0)
     xrs = pdb_processed_file.xray_structure()
+    #xrs = xrs_all#.select(selection)
     sites_cart = xrs.sites_cart()
     nonbonded_proxies = grm.pair_proxies().nonbonded_proxies
     get_sorted_result = nonbonded_proxies.get_sorted(
