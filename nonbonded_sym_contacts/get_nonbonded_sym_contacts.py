@@ -52,45 +52,46 @@ def reduce_pdb(pdb_file) :
   print >> sys.stderr, '%s written...' % nfn
   return nfn
 
-def get_nonbonded_interactions(file_name, distance_cutoff = 2) :
-  # get geostd
-  chem_data = libtbx.env.find_in_repositories(
-    relative_path="chem_data/geostd",
-    test=os.path.isdir)
-  # setup monomer_library server
-  if chem_data is not None:
-    mon_lib_srv = monomer_library.server.server()
-    ener_lib = monomer_library.server.ener_lib()
-  # processed pdb file
-  pdb_processed_file = pdb_interpretation.process(
-    file_name=file_name,
-    mon_lib_srv=mon_lib_srv,
-    ener_lib=ener_lib,
-    force_symmetry = True)
-  # get grm
-  grm = pdb_processed_file.geometry_restraints_manager(
-    show_energies = False,
-    plain_pairs_radius = 5.0)
-  xrs = pdb_processed_file.xray_structure()
-  sites_cart = xrs.sites_cart()
-  nonbonded_proxies = grm.pair_proxies().nonbonded_proxies
-  get_sorted_result = nonbonded_proxies.get_sorted(
-        by_value="delta",
-        sites_cart=sites_cart)
-  if get_sorted_result is None : return
-  sorted_nonb, n_not_shown = get_sorted_result
-  # iterate through nonbonded pairs and skip ones < distance and ones without 
-  # symmetry
-  n_nonb = len(sorted_nonb)
-  i = 0
-  nonb_pairs = []
-  while i < n_nonb and sorted_nonb[i][3] < distance_cutoff :
-    if sorted_nonb[i][-1] is None : i += 1; continue
-    nonb_pairs.append(nonbondedPair(sorted_nonb[i],xrs.scatterers()))
-    i += 1
-  return nonb_pairs
+class NonbondedIinteractions(list) :
 
-def run(args) :
+  def get_nonbonded_interactions(self, file_name, distance_cutoff = 2) :
+    # get geostd
+    chem_data = libtbx.env.find_in_repositories(
+      relative_path="chem_data/geostd",
+      test=os.path.isdir)
+    # setup monomer_library server
+    if chem_data is not None:
+      mon_lib_srv = monomer_library.server.server()
+      ener_lib = monomer_library.server.ener_lib()
+    # processed pdb file
+    pdb_processed_file = pdb_interpretation.process(
+      file_name=file_name,
+      mon_lib_srv=mon_lib_srv,
+      ener_lib=ener_lib,
+      force_symmetry = True)
+    # get grm
+    grm = pdb_processed_file.geometry_restraints_manager(
+      show_energies = False,
+      plain_pairs_radius = 5.0)
+    xrs = pdb_processed_file.xray_structure()
+    sites_cart = xrs.sites_cart()
+    nonbonded_proxies = grm.pair_proxies().nonbonded_proxies
+    get_sorted_result = nonbonded_proxies.get_sorted(
+          by_value="delta",
+          sites_cart=sites_cart)
+    if get_sorted_result is None : return
+    sorted_nonb, n_not_shown = get_sorted_result
+    # iterate through nonbonded pairs and skip ones < distance and ones without 
+    # symmetry
+    n_nonb = len(sorted_nonb)
+    i = 0
+    while i < n_nonb and sorted_nonb[i][3] < distance_cutoff :
+      if sorted_nonb[i][-1] is None : i += 1; continue
+      self.append(nonbondedPair(sorted_nonb[i],xrs.scatterers()))
+      i += 1
+
+def parseargs() :
+  default_distance = 2.
   desc = "This script will show you inter-asymmetric-unit contacts from a PDB "
   desc+= "with a CRYST card. I suggest 3g6t as it has a nice base pair between "
   desc+= " asymmetric units, C 1 to C 2. This script adds hysrogens for you. "
@@ -98,18 +99,24 @@ def run(args) :
   parser = argparse.ArgumentParser(description=desc,
                                   formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('pdb_file', help='A pdb file')
-  s = 'Distance cutoff between the two interacting atoms'
-  parser.add_argument('-d', '--distance_cutoff', type=float, help=s, default=2.)
-  args = parser.parse_args()
+  s = 'Distance cutoff between the two interacting atoms. default is %.1f'
+  parser.add_argument('-d', '--distance_cutoff', type=float,
+                       help=s % default_distance, default=default_distance)
+  return parser.parse_args()
+
+def run() :
+  args = parseargs()
   assert os.path.exists(args.pdb_file)
   reduced_pdb_file = reduce_pdb(args.pdb_file)
-  pairs = get_nonbonded_interactions(file_name=reduced_pdb_file,
+  pairs = NonbondedIinteractions()
+  pairs.get_nonbonded_interactions(file_name=reduced_pdb_file,
                                      distance_cutoff=args.distance_cutoff)
 
-  print 'Here are the inter-asymmetric-unit contacts :'
+  s = 'Here are the inter-asymmetric-unit contacts within a distance of %.1f :'
+  print s % args.distance_cutoff
   for pair in pairs  :
     print pair
 
 if __name__ == '__main__' :
-  run(sys.argv[1:])
+  run()
 

@@ -51,14 +51,14 @@ def get_pdbs(cursor) :
 
 def get_experiment_pdbs(args,mongocon) :
   query = get_experiment_query(args)
-  utils.print_json_pretty(query)
+  utils.print_json_pretty(query,log=sys.stderr)
   cursor = mongocon.db.experiment.find(query,{"_id":1})
   return get_pdbs(cursor)
 
 def get_summary_pdbs(args,mongocon) :
   query = get_summary_query(args)
   if query == {} : return
-  utils.print_json_pretty(query)
+  utils.print_json_pretty(query,log=sys.stderr)
   cursor = mongocon.db.summary.find(query,{"_id":1})
   return get_pdbs(cursor)
 
