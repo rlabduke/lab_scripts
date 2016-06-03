@@ -5,6 +5,9 @@ sys.path.append(os.path.join(scriptpath,'..'))
 from nonbonded_sym_contacts import get_nonbonded_sym_contacts
 
 _default_distance = 2.5
+HIS_ATOMS = [" HD2"," HE1"]
+ASN_ATOMS = ["HD22","HD21"," OD1"]
+GLN_ATOMS = ["HE22","HE21"," OE1"]
 
 def parseags() :
   desc = """This script will return all NQH residues contacting anything in a different asymmetric unit.
@@ -19,16 +22,22 @@ def parseags() :
   assert os.path.exists(args.pdb_file)
   return args
 
-def run() :
-  args = parseags()
-  reduced_pdb_file = get_nonbonded_sym_contacts.reduce_pdb(args.pdb_file)
+def get_HQN_sym_contacts(pdb_file,distance_cutoff) :
+  reduced_pdb_file = get_nonbonded_sym_contacts.reduce_pdb(pdb_file)
   filter_residues = (["HIS","GLN","ASN"],None)
+  filter_atoms = ({"HIS":HIS_ATOMS,"ASN":ASN_ATOMS,"GLN":GLN_ATOMS},None)
   pairs = get_nonbonded_sym_contacts.NonbondedIinteractions()
   pairs.get_nonbonded_interactions(file_name=reduced_pdb_file,
-                                   distance_cutoff=args.distance_cutoff,
+                                   distance_cutoff=distance_cutoff,
                                    select = None,
-                                   filter_residues=filter_residues)
+                                   filter_residues=filter_residues,
+                                   filter_atoms = filter_atoms)
   pairs.write_formatted_pairs()
+  return pairs
+
+def run() :
+  args = parseags()
+  get_HQN_sym_contacts(args.pdb_file, args.distance_cutoff)
 
 if __name__ == '__main__' :
   run()

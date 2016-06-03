@@ -69,7 +69,8 @@ class NonbondedIinteractions(list) :
                                  file_name,
                                  distance_cutoff = 2, 
                                  select = "nucleotide",
-                                 filter_residues = (None,None)) :
+                                 filter_residues = (None,None),
+                                 filter_atoms = (None,None)) :
     print >> sys.stderr, "Source residues : %s" % filter_residues[0]
     print >> sys.stderr, "Target residues : %s" % filter_residues[1]
     assert select in ["nucleotide",None]
@@ -79,6 +80,18 @@ class NonbondedIinteractions(list) :
     if filter_residues[0] : assert isinstance(filter_residues[0],list)
     if filter_residues[1] : assert isinstance(filter_residues[1],list)
     self.file_name = file_name
+    # filter_atoms must be a 2tuple where each element must be None or dict, if
+    # dict the keys must match the residues in filter_residues
+    assert isinstance(filter_atoms,tuple)
+    assert len(filter_atoms) == 2
+    if filter_atoms[0] :
+      assert isinstance(filter_atoms[0],dict)
+      assert filter_residues[0]
+      for k in filter_residues[0] : assert k in filter_atoms[0],k
+    if filter_atoms[1] :
+      assert isinstance(filter_atoms[1],dict)
+      assert filter_residues[1]
+      for k in filter_residues[1] : assert k in filter_atoms[1],k
     # get geostd
     chem_data = libtbx.env.find_in_repositories(
       relative_path="chem_data/geostd",
@@ -127,12 +140,14 @@ class NonbondedIinteractions(list) :
       # skip intra-asym interactions
       if sorted_nonb[i][-1] is None : i += 1; continue
       pair = nonbondedPair(sorted_nonb[i],xrs.scatterers())
-      if filter_residues[0] and\
-                   pair.residues[0].resname not in filter_residues[0] :
-        i += 1; continue
-      if filter_residues[1] and\
-                   pair.residues[1].resname not in filter_residues[1] :
-        i += 1; continue
+      rn0 = pair.residues[0].resname
+      rn1 = pair.residues[1].resname
+      an0 = pair.residues[0].name
+      an1 = pair.residues[1].name
+      if filter_residues[0] and rn0 not in filter_residues[0] : i += 1; continue
+      if filter_residues[1] and rn1 not in filter_residues[1] : i += 1; continue
+      if filter_atoms[0] and an0 not in filter_atoms[0][rn0] : i += 1; continue
+      if filter_atoms[1] and an1 not in filter_atoms[1][rn1] : i += 1; continue
       self.append(pair)
       i += 1
 
