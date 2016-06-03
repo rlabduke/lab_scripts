@@ -65,7 +65,20 @@ def reduce_pdb(pdb_file) :
 
 class NonbondedIinteractions(list) :
 
-  def get_nonbonded_interactions(self, file_name, distance_cutoff = 2) :
+  def get_nonbonded_interactions(self,
+                                 file_name,
+                                 distance_cutoff = 2, 
+                                 select = "nucleotide",
+                                 filter_residues = (None,None)) :
+    print >> sys.stderr, "Source residues : %s" % filter_residues[0]
+    print >> sys.stderr, "Target residues : %s" % filter_residues[1]
+    assert select in ["nucleotide",None]
+    # filter_residues must be a 2tuple where each element must be None or list
+    assert isinstance(filter_residues,tuple)
+    assert len(filter_residues) == 2
+    if filter_residues[0] : assert isinstance(filter_residues[0],list)
+    if filter_residues[1] : assert isinstance(filter_residues[1],list)
+    self.file_name = file_name
     # get geostd
     chem_data = libtbx.env.find_in_repositories(
       relative_path="chem_data/geostd",
@@ -75,15 +88,16 @@ class NonbondedIinteractions(list) :
       mon_lib_srv = monomer_library.server.server()
       ener_lib = monomer_library.server.ener_lib()
     # get NA selection
-    pdb_inp = iotbx.pdb.input(file_name=file_name)
+    pdb_inp = iotbx.pdb.input(file_name=self.file_name)
     pdb_hierarchy = pdb_inp.construct_hierarchy()
-    asc = pdb_hierarchy.atom_selection_cache()
-    selection = asc.selection("nucleotide")
-    pdb_hierarchy = pdb_hierarchy.select(selection)
-    pdb_hierarchy.atoms().reset_i_seq()
+    if select :
+      asc = pdb_hierarchy.atom_selection_cache()
+      selection = asc.selection("nucleotide")
+      pdb_hierarchy = pdb_hierarchy.select(selection)
+      pdb_hierarchy.atoms().reset_i_seq()
     # processed pdb file
     pdb_processed_file = pdb_interpretation.process(
-      #file_name=file_name,
+      #file_name=self.file_name,
       pdb_inp=pdb_hierarchy.as_pdb_input(),
       mon_lib_srv=mon_lib_srv,
       ener_lib=ener_lib,
@@ -110,9 +124,41 @@ class NonbondedIinteractions(list) :
     n_nonb = len(sorted_nonb)
     i = 0
     while i < n_nonb and sorted_nonb[i][3] < distance_cutoff :
+      # skip intra-asym interactions
       if sorted_nonb[i][-1] is None : i += 1; continue
-      self.append(nonbondedPair(sorted_nonb[i],xrs.scatterers()))
+      pair = nonbondedPair(sorted_nonb[i],xrs.scatterers())
+      if filter_residues[0] and\
+                   pair.residues[0].resname not in filter_residues[0] :
+        i += 1; continue
+      if filter_residues[1] and\
+                   pair.residues[1].resname not in filter_residues[1] :
+        i += 1; continue
+      self.append(pair)
       i += 1
+
+  def write_raw_pairs(self,log=sys.stdout) :
+    for pair in self : print >> log, pair
+
+  def write_formatted_pairs(self,log=sys.stdout) :
+    found = '%i pair[s] found in %s'
+    residue_level_pairs = {}
+    found_n = 0
+    for pair in self :
+      rn1 = pair.residues[0].resname
+      rn2 = pair.residues[1].resname
+      #print pair
+      key = (pair.residue_ids[0],pair.residue_ids[1])
+      if not key in residue_level_pairs.keys() : residue_level_pairs[key] = []
+      t = (pair.residues[0].name,pair.residues[1].name,'%.2f'%pair.distance)
+      residue_level_pairs[key].append(t)
+    if len(residue_level_pairs) > 0 :
+      print >> sys.stderr, found % (len(residue_level_pairs),self.file_name)
+      found_n += len(residue_level_pairs)
+    for k,l in residue_level_pairs.items() :
+      print >> log, k
+      for e in l : print >> log, '    ' + str(e)
+    #break
+    print >> sys.stderr, '%i TOTAL pair[s] found' % found_n
 
 def parseargs() :
   default_distance = 2.
@@ -126,6 +172,8 @@ def parseargs() :
   s = 'Distance cutoff between the two interacting atoms. default is %.1f'
   parser.add_argument('-d', '--distance_cutoff', type=float,
                        help=s % default_distance, default=default_distance)
+  s = 'Write a residue-formatted output'
+  parser.add_argument('-f','--formatted',action="store_true",help=s)
   return parser.parse_args()
 
 def run() :
@@ -134,12 +182,16 @@ def run() :
   reduced_pdb_file = reduce_pdb(args.pdb_file)
   pairs = NonbondedIinteractions()
   pairs.get_nonbonded_interactions(file_name=reduced_pdb_file,
-                                     distance_cutoff=args.distance_cutoff)
+                                   distance_cutoff=args.distance_cutoff,
+                                   select = None,
+                                   filter_residues = (None,None))
 
   s = 'Here are the inter-asymmetric-unit contacts within a distance of %.1f :'
   print s % args.distance_cutoff
-  for pair in pairs  :
-    print pair
+  if args.formatted : pairs.write_formatted_pairs()
+  else : pairs.write_raw_pairs()
+  # cleanup
+  os.remove(reduced_pdb_file)
 
 if __name__ == '__main__' :
   run()
