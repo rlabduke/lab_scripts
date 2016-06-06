@@ -32,12 +32,12 @@ def get_HQN_sym_contacts(pdb_file,distance_cutoff) :
                                    select = None,
                                    filter_residues=filter_residues,
                                    filter_atoms = filter_atoms)
-  pairs.write_formatted_pairs()
   return pairs
 
 def run() :
   args = parseags()
   get_HQN_sym_contacts(args.pdb_file, args.distance_cutoff)
+  pairs.write_formatted_pairs()
 
 if __name__ == '__main__' :
   run()
