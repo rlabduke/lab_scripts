@@ -51,11 +51,13 @@ class nonbondedPair(object) :
 
 def reduce_pdb(pdb_file) :
   # returns the new filename
+  assert os.path.exists(pdb_file)
   assert pdb_file.endswith(".pdb") #TODO: Can we do CIF files?
   assert libtbx.env.has_module(name="reduce")
   cmd = "phenix.reduce %s" % pdb_file
   out = easy_run.fully_buffered(cmd)
-  assert out.return_code == 0
+  print >> sys.stderr, "Running : %s" % cmd
+  assert out.return_code == 0,out.stderr_lines
   nfn = pdb_file.replace(".pdb","H.pdb")
   fle = open(nfn,'w')
   for l in out.stdout_lines: print >> fle, l

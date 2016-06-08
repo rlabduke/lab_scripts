@@ -5,7 +5,7 @@ sys.path.append(os.path.join(scriptpath,'..'))
 from nonbonded_sym_contacts import get_nonbonded_sym_contacts
 
 _default_distance = 2.5
-HIS_ATOMS = [" HD2"," HE1"]
+HIS_ATOMS = [" HD2"," HE1"," ND1"," NE2"," HE2"," HD1"]
 ASN_ATOMS = ["HD22","HD21"," OD1"]
 GLN_ATOMS = ["HE22","HE21"," OE1"]
 

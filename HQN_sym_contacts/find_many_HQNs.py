@@ -10,10 +10,6 @@ import mmtbx.command_line.fetch_pdb
 import get_HQN_sym_contacts
 
 _default_distance = 2.5
-HIS_ATOMS = [" HD2"," HE1"]
-ASN_ATOMS = ["HD22","HD21"," OD1"]
-GLN_ATOMS = ["HE22","HE21"," OE1"]
-
 
 def parseags() :
   desc = """This script will return a list of many potential inter_asymmetric unit NQH flips from the Top8000.
