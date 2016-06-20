@@ -62,7 +62,7 @@ def run() :
   found_n = 0
   for i,pdb_id in enumerate(pdbs) :
     if i % 100 == 0 : print >> sys.stderr, thr % (i,(i*100.)/len(pdbs))
-    pdb_id = '3G6Q'
+    pdb_id = '4G0F'
     fn = fetch_pdb(pdb_id)
     if args.verbose : print >> sys.stderr, "Fetched %s" % fn
     reduced_pdb_file = get_nonbonded_sym_contacts.reduce_pdb(fn)
@@ -72,6 +72,9 @@ def run() :
                                      filter_residues = filter_residues)
     residue_level_pairs = {}
     for pair in pairs  :
+      # We dont care about ribose atoms
+      if pair.residues[0].name.strip().endswith('\'') \
+         or pair.residues[1].name.strip().endswith('\'') : continue
       key = (pdb_id,pair.residue_ids[0],pair.residue_ids[1])
       if not key in residue_level_pairs.keys() : residue_level_pairs[key] = []
       t = (pair.residues[0].name,pair.residues[1].name,'%.2f'%pair.distance)

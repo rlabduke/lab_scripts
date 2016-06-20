@@ -54,7 +54,7 @@ def reduce_pdb(pdb_file) :
   assert os.path.exists(pdb_file)
   assert pdb_file.endswith(".pdb") #TODO: Can we do CIF files?
   assert libtbx.env.has_module(name="reduce")
-  cmd = "phenix.reduce %s" % pdb_file
+  cmd = "phenix.reduce %s" % pdb_file.replace(' ','\\ ')
   out = easy_run.fully_buffered(cmd)
   print >> sys.stderr, "Running : %s" % cmd
   assert out.return_code == 0,out.stderr_lines
