@@ -57,12 +57,16 @@ def run() :
   pdbs = get_dna_pdbs(args.resolution)
 
   # iterate through pdbs
-  thr = "Through %i - %.2f%%"
+  thr = "\n\nThrough %i - %.2f%%\n\n"
   found = '%i pair[s] found in %s'
   found_n = 0
+  there = False
+  touble = ['2E1C','2XC6','2WNA','4WLW','2H9S']
   for i,pdb_id in enumerate(pdbs) :
     if i % 100 == 0 : print >> sys.stderr, thr % (i,(i*100.)/len(pdbs))
-    pdb_id = '4G0F'
+    if not there and pdb_id == "2H9S" : there = True; continue
+    if not there : continue
+    #pdb_id = '3C5F'
     fn = fetch_pdb(pdb_id)
     if args.verbose : print >> sys.stderr, "Fetched %s" % fn
     reduced_pdb_file = get_nonbonded_sym_contacts.reduce_pdb(fn)
@@ -88,7 +92,7 @@ def run() :
     # cleanup
     os.remove(fn)
     os.remove(reduced_pdb_file)
-    break
+    #break
   print >> sys.stderr, '%i TOTAL %s pair[s] found' % (found_n,args.basepair)
 
 if __name__ == "__main__" :

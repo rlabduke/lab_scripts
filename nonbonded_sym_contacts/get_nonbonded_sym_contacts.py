@@ -9,6 +9,7 @@ import re
 import iotbx.pdb
 
 def parse_label(lab) :
+  if lab.startswith("model=") : lab = lab[lab.find("pdb="):]
   assert isinstance(lab,str),type(lab)
   ab = re.compile('pdb=".{15}"')
   assert ab.match(lab),lab
@@ -123,6 +124,7 @@ class NonbondedIinteractions(list) :
     # get grm
     grm = pdb_processed_file.geometry_restraints_manager(
       hard_minimum_nonbonded_distance=0,
+      nonbonded_distance_threshold=None,
       show_energies = False,
       plain_pairs_radius = 5.0)
     xrs = pdb_processed_file.xray_structure()
