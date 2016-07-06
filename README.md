@@ -21,3 +21,6 @@ This does not actually contain a script, but rather instructions on rsyncing the
 
 #nonbonded_sym_contacts
 This script returns a list of nonbonded inter-asymmetric-unit interactions.
+
+#cis_in_cazy
+Queries the cazy database to determine if a given PDB is in their files as being carbohydrate relevant, and if so scrapes some data.
