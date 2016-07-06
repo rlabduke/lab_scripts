@@ -1,12 +1,14 @@
 #!/bin/bash
 
 extension=".pdb"
-curl_pre="\"http://www.cazy.org/search?page=recherche&lang=en&recherche="
-curl_post="&tag=8\""
+curl_pre="http://www.cazy.org/search?page=recherche&lang=en&recherche="
+curl_post="&tag=8"
 cat these_pdbs.csv | while read line
 do
     pdb=$line$extension
-    echo $curl_pre$line$curl_post
+    curlurl=$curl_pre$line$curl_post
+    curl $curlurl > $line".html"
+
 done
 
 # grep hits 1ubq.html
