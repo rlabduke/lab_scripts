@@ -1,6 +1,6 @@
 
 
-import os, subprocess
+import os, subprocess, re
 
 results = {}
 
@@ -20,11 +20,31 @@ for each_html in os.listdir("raw_html"):
             if hits:
                 if "<td>" in line:
                     #print line
-                    results[each_html].append(line)
+                    #sed processing on line
+                    entry = line
+                    entry = entry.rstrip()
+                    entry = entry.lstrip()
+                    entry = re.sub('<td>', '', entry)
+                    entry = re.sub('</td>', '', entry)                    
+                    entry = re.sub('<a href="http://www.cazy.org/', '', entry)
+                    entry = re.sub('.html">', '', entry)
+                    results[each_html].append(entry)
                     #results.append the next bit
                 #process
             if "</table>" in line:
                 print "done processing" + each_html
                 break #done processing the table
 
-print results
+for key, value in results.iteritems():
+    for entry in value:
+        print entry
+
+
+
+            
+for key, value in results.iteritems():
+    line = key
+    for each_field in value:
+        line += each_field
+    #print line
+    #print len(value)
