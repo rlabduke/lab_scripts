@@ -7,7 +7,8 @@ hits2 = []
 hits3 = []
 
 for each_html in os.listdir("raw_html"):
-    if "hits" in each_html:
+    f = open("raw_html/"+each_html, 'r').read()
+    if "hits" in f:
         print each_html
 
 #pseudocode for the rest of the project (do this in python)
