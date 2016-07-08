@@ -2,14 +2,22 @@
 
 import os, subprocess
 
-hits1 = []
-hits2 = []
-hits3 = []
+results = {}
 
 for each_html in os.listdir("raw_html"):
     f = open("raw_html/"+each_html, 'r').read()
     if "hits" in f:
-        print each_html
+        hits = False #flag for if we hit the right part of the file yet
+        for line in f:
+            if "hits" in line:
+                hits = True
+                continue
+            if hits:
+                if "<td>" in line:
+                    #results.append the next bit
+                #process
+            if "</table>" in line:
+                break #done processing the table
 
 #pseudocode for the rest of the project (do this in python)
 # grep hits 1ubq.html
