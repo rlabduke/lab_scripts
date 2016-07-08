@@ -32,19 +32,20 @@ for each_html in os.listdir("raw_html"):
                     #results.append the next bit
                 #process
             if "</table>" in line:
-                print "done processing" + each_html
+                #print "done processing" + each_html
                 break #done processing the table
 
+#for key, value in results.iteritems():
+#    for entry in value:
+#        print entry
+
+
+
+header = ":Family:Kingdom:Organism:Protein Name"
+print "PDB" + header + header + header
 for key, value in results.iteritems():
-    for entry in value:
-        print entry
-
-
-
-            
-for key, value in results.iteritems():
-    line = key
+    line = key.split(".")[0]
     for each_field in value:
-        line += each_field
-    #print line
+        line += ":" + each_field
+    print line
     #print len(value)
