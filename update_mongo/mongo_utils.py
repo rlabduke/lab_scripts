@@ -1,6 +1,7 @@
 import sys,os
 from pymongo import MongoClient
 import json
+import getpass
 
 def get_creds_fn() :
   for dirname in sys.path:
@@ -10,6 +11,17 @@ def get_creds_fn() :
   #raise RuntimeError("Can't find file creds.json")
   return None
 
+def get_user() :
+  thisuser = getpass.getuser()
+  s = "Use %s for the MongoDB user? y/n : " % thisuser
+  answer = 'wtf'
+  while answer not in ['y','n'] :
+    answer = raw_input(s)
+    if answer  not in ['y','n'] : print "Type 'y' or 'n'."
+  if answer == 'n' :
+    return raw_input('Please input Mongo username : ')
+  else : return thisuser
+
 def get_creds(user=None) :
   fn = get_creds_fn()
   if fn and os.path.exists(fn) :
@@ -17,9 +29,9 @@ def get_creds(user=None) :
     d=json.load(fle)
     fle.close()
     return d['user'],d['dwp']
-  import getpass
   if not user :
-    user = getpass.getuser()
+    user = get_user()
+    #user = getpass.getuser()
   print >> sys.stderr, "Please enter password for %s :" % user
   pwd = getpass.getpass()
   return user,pwd
