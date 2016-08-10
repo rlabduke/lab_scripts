@@ -4,7 +4,8 @@ import json
 urls = {
   'summary':"/pdb/entry/summary",
   'experiment':"/pdb/entry/experiment",
-  'sifts':"/mappings"
+  'sifts':"/mappings",
+  'molecules':"/pdb/entry/entities"
 }
 
 PY3 = sys.version > '3'
