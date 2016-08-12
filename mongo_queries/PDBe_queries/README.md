@@ -1,5 +1,1 @@
-Various lab related quaries to the MongoDB on daneel.
-
-#PDBe_queries
 This is a directory that keeps scripts that queries for info at the file level using the PDBe's JSON documents. This may or may not query the MongoDB in the RLab but may use the PDBe's Python API and get the requested documents via the internet. This method is useful when asking about a single PDB. The MongoDB queries are useful when you want a list of PDBs, e.g. give me all PDBs with a resolution higher than 1.2.
-

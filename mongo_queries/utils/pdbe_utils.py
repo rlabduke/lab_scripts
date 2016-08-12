@@ -5,7 +5,7 @@ urls = {
   'summary':"/pdb/entry/summary",
   'experiment':"/pdb/entry/experiment",
   'sifts':"/mappings",
-  'molecules':"/pdb/entry/entities"
+  'molecule':"/pdb/entry/entities"
 }
 
 PY3 = sys.version > '3'
