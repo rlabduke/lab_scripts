@@ -52,12 +52,15 @@ def run(args) :
                       help='A file of PDB codes or just a PDB code.',
                       type=str)
   args = parser.parse_args()
+  pdbs_done = []
   if os.path.exists(args.pdblist_or_code) :
     fle = open(args.pdblist_or_code)
     for i,l in enumerate(fle) :
       #if i > 10 : break
       if i%100 == 0 : print >> sys.stderr, "Trough %i" % i
       pdb_id = l.strip()
+      if pdb_id in pdbs_done : continue
+      pdbs_done.append(pdb_id)
       write_molecule_info_csv(pdb_id)
     fle.close()
   else :
