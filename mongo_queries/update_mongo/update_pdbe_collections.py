@@ -1,6 +1,7 @@
 import os,sys
 import argparse
-import pdbe_utils
+sys.path.append('..')
+from utils import pdbe_utils
 import mongo_utils
 import json
 

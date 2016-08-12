@@ -1,3 +1,4 @@
 creds.json
 allpdbs.l
 try.py
+*.pyc
