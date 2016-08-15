@@ -74,7 +74,7 @@ class MongodbConnection(object) :
   def connect(self) :
     uri = "mongodb://%s:%s@daneel.research.duhs.duke.edu/"
     client = MongoClient(uri % (self.user,self.pwd))
-    assert hasattr(client,self.db_name), '%s not on daneel'  % self.db_name
+    assert hasattr(client,self.db_name), '%s not on specified host'  % self.db_name
     self.db = getattr(client,self.db_name)
 
 def get_num_aas_in_chain(pdb_id,chain,db,return_both_unique_alt=False) :

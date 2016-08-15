@@ -14,14 +14,15 @@ class Entity(object) :
   def get_info(self) :
     return {'pdb_id':self.pdb_id,
             'molecule_type':self.entityd["molecule_type"],
-            'entity_id':self.entityd["entity_id"],
+	    'entity_id':self.entityd["entity_id"],
+            'in_chains':','.join(self.entityd["in_chains"]),
             'molecule_name':','.join(self.entityd["molecule_name"])}
 
   def write_info(self,write_head=False,log=sys.stdout) :
     info = self.get_info()
-    heads = ['pdb_id','entity_id','molecule_type','molecule_name']
+    heads = ['pdb_id','entity_id','in_chains','molecule_type','molecule_name']
     if write_head : print >> log, ':'.join(heads)
-    print >> log, ':'.join([str(info[label]) for label in heads])
+    print >> log, '\t'.join([str(info[label]) for label in heads])
 
 def get_molecules(pdb_id) :
   doc = pdbe_utils.PDBdoc(pdb_id)
