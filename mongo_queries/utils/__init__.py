@@ -72,10 +72,14 @@ class MongodbConnection(object) :
     self.connect()
 
   def connect(self) :
-    uri = "mongodb://%s:%s@daneel.research.duhs.duke.edu/"
-    client = MongoClient(uri % (self.user,self.pwd))
-    assert hasattr(client,self.db_name), '%s not on specified host'  % self.db_name
-    self.db = getattr(client,self.db_name)
+    uri = "mongodb://%s:%s@127.0.0.1/?authSource=test"
+    self.client = MongoClient(uri % (self.user,self.pwd))
+    assert hasattr(self.client,self.db_name),'%s not in MongoDB'%self.db_name
+    self.set_db(self.db_name)
+
+  def set_db(self,db) :
+    self.db_name = db
+    self.db = getattr(self.client,db)
 
 def get_num_aas_in_chain(pdb_id,chain,db,return_both_unique_alt=False) :
   q = {'pdb_id':pdb_id,'chain_id':chain}
@@ -113,12 +117,17 @@ def get_filtered_pdbs(high_resolution,
     broadcast_query(query= qd,collection='experiment',n=len(pdbs),project=pd)
   return pdbs
 
-def get_Top8000_pdb_list(homology_level=70,verbose=False) :
+def get_Top8000_pdb_list(homology_level=70,verbose=False,connection=None) :
+  # Although not required, it is generally a good idea to provida a connection,
+  # which is a MongodbConnection object, as you will likely use this object
+  # later in your script as you iterate through the pdbs gotten here.
   assert homology_level in [50,70,90,95]
   q = {"in_mtz_%i"%homology_level:1}
   # we only want pdb_id and chain
   p = {"pdb_id":1,"chain":1}
-  mongocon = MongodbConnection(db_name='top8000_rota_data')
+  if not connection : mongocon = MongodbConnection()
+  else : mongocon = connection
+  mongocon.set_db(db='top8000_rota_data')
   cursor = mongocon.db.versions_2.find(q,p)
   if verbose : print >> sys.stderr, 'fetched %i PDB-chains.' % cursor.count()
   return [(e["pdb_id"],e["chain"]) for e in cursor]

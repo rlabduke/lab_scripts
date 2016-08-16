@@ -202,14 +202,15 @@ def run(args) :
   parser.add_argument('-v','--verbose',action='store_true',help='Be verbose')
   args = parser.parse_args()
 
+  # Get connection to mongo
+  mongocon = utils.MongodbConnection()
+
   # Get pdbs
-  pdbs = utils.get_Top8000_pdb_list(homology_level=args.homology_level)
+  pdbs = utils.get_Top8000_pdb_list(homology_level=args.homology_level,
+                                    connection=mongocon)
   if args.verbose :
     s = '%i pdbs found in Top8000 at homology level %i'
     utils.broadcast(s % (len(pdbs),args.homology_level))
-
-  # Get connection to mongo
-  mongocon = utils.MongodbConnection()
 
   # Set noncispro filename
   ncp_fn = 'non_cis_pro_filtered_%i.csv' % args.homology_level
