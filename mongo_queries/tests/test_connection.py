@@ -22,7 +22,7 @@ class TestConnection(unittest.TestCase) :
   def test_residues_colkeys(self) :
     q = {"pdb_id":"2efw","chain_id":"B","resseq":50}
     cursor = self.MDBConn.db.residues_colkeys.find(q)
-    assert cursor.count() == 1,cursor.count()
+    assert cursor.count() == 1
     rota = cursor[0]["rotalyze"]
     self.assertEqual(rota["rotamer"],"t80")
     self.assertEqual(rota["rotalyze_evaluation"],"Favored")

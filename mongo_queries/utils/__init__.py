@@ -66,14 +66,16 @@ class group_args(object):
 
 class MongodbConnection(object) :
 
-  def __init__(self,db_name='pdb_info',user=None) :
+  def __init__(self,db_name='pdb_info',user='rlaber') :
     self.user, self.pwd = get_creds(user)
+    print >> sys.stderr, 'Logged into Mongo as %s.' % self.user
     self.db_name = db_name
     self.connect()
 
   def connect(self) :
     uri = "mongodb://%s:%s@127.0.0.1/?authSource=test"
     self.client = MongoClient(uri % (self.user,self.pwd))
+    print 
     assert hasattr(self.client,self.db_name),'%s not in MongoDB'%self.db_name
     self.set_db(self.db_name)
 
