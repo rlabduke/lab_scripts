@@ -56,7 +56,7 @@ def get_existing_pdb_ids(collection,mcon) :
 
 def run(args) :
   desc = """Updates the either pdb_info.experiment or pdb_info.summary on 
-  daneel. The script has the following steps :
+  caldera. The script has the following steps :
 
   - get a list of currently deposited pdbs (in allpdbs.l) 
   - get a list of pdbs in given collection. 
@@ -80,7 +80,7 @@ def run(args) :
   n_pdbs,pdbs = get_current_pdbs()
   print >> sys.stderr, 'There are currently %i deposited pdbs.' % n_pdbs
 
-  # connect to mongo on daneel
+  # connect to mongo on caldera
   mcon = mongo_utils.MongodbConnection()
 
   # get a list of pdbs in given collection

@@ -51,7 +51,7 @@ class MongodbConnection(object) :
     self.connect()
 
   def connect(self) :
-    uri = "mongodb://%s:%s@daneel.research.duhs.duke.edu/"
+    uri = "mongodb://%s:%s@127.0.0.1/?authSource=test"
     client = MongoClient(uri % (self.user,self.pwd))
-    assert hasattr(client,self.db_name), '%s not on daneel'  % self.db_name
+    assert hasattr(client,self.db_name), '%s not on caldera'  % self.db_name
     self.db = getattr(client,self.db_name)
