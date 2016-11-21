@@ -19,6 +19,7 @@ def run(args) :
   desc+= "used in other scripts."
   parser = argparse.ArgumentParser(description=desc)
   parser.add_argument('collection', help='A collection in pdb_info on caldera')
+  parser.add_argument('-o', dest='outfile' ,help='Output file name.')
   args = parser.parse_args()
 
   current_collections = ["residues_colkeys"]
@@ -29,10 +30,17 @@ def run(args) :
 
   if args.collection == "residues_colkeys" :
     pdbs = get_residues_colkeys_pdbs(mcon)
+    if args.outfile : fle = open(args.outfile,'w')
+    else : fle = sys.stdout
     for i,e in enumerate(pdbs) :
-      print e
-      if i == 10 : break
-    print "...%i more pdbs" % (len(pdbs)-i)
+      print >> fle, e
+      if not args.outfile and i == 10 :
+        # If not writing to an outfile, don't write all pdb codes
+        print "...%i more pdbs" % (len(pdbs)-i)
+        break
+    if args.outfile :
+      fle.close()
+      print >> sys.stderr, '\n%s written.\n' % args.outfile
 
 if __name__ == '__main__' :
   run(sys.argv[1:])
