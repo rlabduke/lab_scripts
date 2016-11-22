@@ -1,0 +1,15 @@
+This directory is meant to get validation data for PDBs missing from the Richardson's lab MongoDB database. This is no way gauenteed to work out of the box. To run the missing pdbs you have to first need to get a list of PDBs already in the DB, called residues_colkeys_pdbs.l. Once you have that list in this directory, then copy this directoty to the LBL cluster. Once there, run setup .sh which runs the get_missing.py script (which takes residues_colkeys_pdbs.l as an argument) and writes a file called pdbs_to_be_done.l. This is then used by the qsub scripts to get run the validation scripts on the missing pdbs. The setup script will print out the command to run the que. Here are the steps inssequence.
+
+
+# get the pdbs in the db (on your machine with a ssh tunnel to caldera)
+python get_list_of_pdbs_in_collection.py residues_colkeys -o residues_colkeys_pdbs.l
+
+# ensure that residues_colkeys_pdbs.l are in this directory and then
+# copy this directory to LBL.
+
+# ssh to LBL and go to the copied directory.
+# setup directories (residues_colkeys_pdbs.l must be in the directory!)
+# and get the pdbs that need to be done.
+$ ./setup.sh
+
+# Issue the qsub command printted out at the end of setup,
