@@ -9,14 +9,15 @@ class NQH_density(object) :
     self.pdb_id = pdb_id
 
   def set_density_values(self,db) :
-    heads = ['pdb_id','chain_id','resseq','icode','altloc','resname','N','C_O']
-    heads+= ["delta"]
+    heads = ['pdb_id','chain_id','resseq','icode','altloc','resname']
+    heads+= ['worst_rscc','worst_2fo-fc','N','C_O','delta']
     self.csv_lines = [heads]
     q = {"pdb_id":self.pdb_id,"resname":{"$in":["GLN","ASN","HIS"]}}
     cursor = db.residues_colkeys.find(q)
     for d in cursor :
-      ll = [d["pdb_id"],d["chain_id"],"%i"%(d["resseq"]),d["icode"],d["altloc"]]
-      ll+= [d["resname"]]
+      ll = [d["pdb_id"],d["chain_id"],"%i"%(d["resseq"]),d["icode"].strip()]
+      ll+= [d["altloc"],d["resname"],"%.3f" % d["worst_all"]["rscc"]["value"]]
+      ll+= ["%.3f" % d["worst_all"]["twoFo_DFc_value"]["value"]]
       if d["resname"] == "HIS" :
         Na = d["atoms"]["ND1"]["twoFo_DFc_value"]
         COa = d["atoms"]["CD2"]["twoFo_DFc_value"]
