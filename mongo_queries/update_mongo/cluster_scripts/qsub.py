@@ -25,10 +25,10 @@ def get_pdb_paths() :
   return paths
 
 def get_cmd(mmcif_fp) :
-  #pdbid = get_pdb_code(mmcif_fp)
-  pdbid = mmcif_fp
-  cmd_ = ["phenix.python",pgm_path,pdbid,'--outdir',outd,'--pdb_cif',mmcif_fp]
-  #cmd_ = ["phenix.python",pgm_path,pdbid,'--outdir',outd]
+  pdbid = get_pdb_code(mmcif_fp)
+  #pdbid = mmcif_fp
+  #cmd_ = ["phenix.python",pgm_path,pdbid,'--outdir',outd,'--pdb_cif',mmcif_fp]
+  cmd_ = ["phenix.python",pgm_path,pdbid,'--outdir',outd]
   cmd_ += ['--write_out_file','-d','residue']
   return ' '.join(cmd_)
 
