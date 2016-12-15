@@ -1,14 +1,15 @@
 import os,sys
 from pymongo import MongoClient
 import json
+import re
 
 reslist = ['ALA', 'CYS', 'GLU', 'ASP', 'GLY', 
            'PHE', 'ILE', 'HIS', 'LYS', 'MET',
            'LEU', 'ASN', 'GLN', 'PRO', 'SER',
            'ARG', 'THR', 'TRP', 'VAL', 'TYR', 'MSE']
-
+     
 collections = ['pdb_residues','file_info','experiment']
-
+     
 def print_json_pretty(d,log=sys.stdout) :
   try :
     print >> log, json.dumps(d,indent=4, separators=(',', ': '))
@@ -134,6 +135,46 @@ def get_Top8000_pdb_list(homology_level=70,verbose=False,connection=None) :
   if verbose : print >> sys.stderr, 'fetched %i PDB-chains.' % cursor.count()
   return [(e["pdb_id"],e["chain"]) for e in cursor]
 
+hetero_list = []
+hydrogen_list = []
+#print(os.path.join(os.path.dirname(os.path.realpath(__file__)),"sc-connect.props"))
+with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"sc-connect.props")) as pdb_atoms_file:
+  hetero_list = []
+  hydrogen_list = []
+  for line in pdb_atoms_file:
+    if not line.startswith("#") and "=" in line:
+      split_line = line.split(" = ")
+      split_line[1]=split_line[1].strip()
+      split_line[1]=split_line[1].strip("\"")
+      split_line[1]=split_line[1].strip(";")
+      #print split_line
+      if ".hy" in split_line[0]:
+        atom_pairs = split_line[1].split(";")
+        for atom_pair in atom_pairs:
+          atoms = atom_pair.split(",")
+          if not atoms[1] in hydrogen_list:
+            hydrogen_list.append(atoms[1])
+      else:
+        atoms = re.split(',|;', split_line[1])
+        for atom in atoms:
+          if not atom in hetero_list:
+            hetero_list.append(atom)
+  #print hydrogen_list
+  hetero_list = hetero_list + hydrogen_list
+  #print hetero_list
+  
+def atom_sort(atom):
+  atom = format_atom(atom)
+  if atom in hetero_list:
+    return hetero_list.index(atom)
+  return -1
+  
+def format_atom(atom):
+  if len(atom) == 4: return atom
+  if len(atom) == 1 or len(atom) == 2: return "{:^4}".format(atom)
+  if len(atom) == 3: return "{:>4}".format(atom)
+  return "????"
+
 class MongoResidue(object) :
 
   def __init__(self, mongodoc) :
@@ -201,6 +242,20 @@ class MongoResidue(object) :
     if self.raw_mongodoc[worstregion]['rscc']['value'] < \
             self.rscc_threshold : return False
     return True
+    
+  def is_outlier(self):
+    analysis_types = ['rotalyze', 'omegalyze', 'ramalyze']
+    mongo_keys = self.raw_mongodoc.keys()
+    for analysis in analysis_types:
+      if analysis in mongo_keys:
+        if self.raw_mongodoc[analysis]['is_outlier']: return True
+    if "worst_bb" in mongo_keys:
+      try:
+        if self.raw_mongodoc['worst_bb']['adp']['value'] > 30: return True
+      except KeyError:
+        print(self.pdb_id+self.resname+self.resseq+" seems to be missing an adp value")
+    if "cablam" in mongo_keys:
+      if self.raw_mongodoc['cablam'][0]['c_alpha_geom_outlier']: return True
 
   def set_omega(self) :
     if 'omegalyze' not in self.raw_mongodoc.keys() : return
@@ -223,6 +278,48 @@ class MongoResidue(object) :
     for an,d in atoms.items() :
       if d['occ'] < lowest_occ : lowest_occ = d['occ']
     return lowest_occ
+  
+  # attempt to figure out the element type from the atom name
+  def get_atom_element(self, atom):
+    if len(atom) ==1: return atom
+    if "C" in atom: return "C"
+    if "H" in atom: return "H"
+    if "N" in atom: return "N"
+    if "O" in atom: return "O"
+    if "S" in atom: return "S"
+    
+  # reconstruct the residue's atom records?  
+  def get_atom_record(self, atom, atom_number):
+    assert isinstance(atom,str)
+    if not 'atoms' in self.raw_mongodoc.keys() : return
+    atoms = self.raw_mongodoc['atoms']
+    if not atom in atoms.keys() : return
+    atom_formatter = "ATOM  {atomnum:>5} {atomname}{altloc:>1}{resname} {chainid:>1}{resnum:>4}{icode:>1}   {xcoord:>8.3f}{ycoord:>8.3f}{zcoord:>8.3f}{occ:>6.2f}{bfact:>6.2f}          {element:>2}  {extra}"
+    return atom_formatter.format(atomnum=atom_number,
+                                 atomname=format_atom(atom),
+                                 altloc=self.altloc,
+                                 resname=self.resname,
+                                 chainid=self.chain_id,
+                                 icode=self.icode,
+                                 resnum=self.resseq,
+                                 xcoord=atoms[atom]["xyz"][0],
+                                 ycoord=atoms[atom]["xyz"][1],
+                                 zcoord=atoms[atom]["xyz"][2],
+                                 occ=atoms[atom]["occ"],
+                                 bfact=atoms[atom]["adp"],
+                                 element=self.get_atom_element(atom),
+                                 extra=self.pdb_id+self.resname+self.resseq)
+                                     
+  def get_atom_records(self, region="all"):
+    assert region in ['all','bb']
+    bb_atom = ["N", "C", "CA", "O", "CB"]
+    if not 'atoms' in self.raw_mongodoc.keys() : return
+    atoms = self.raw_mongodoc['atoms']
+    all_records=""
+    for atom in sorted(atoms.keys(), key=atom_sort):
+      if region=='bb' and atom in bb_atom or region=='all':
+        all_records = all_records+(self.get_atom_record(str(atom), "1")+"\n")
+    return all_records
 
 class MongoResidueList(dict) :
 
@@ -240,6 +337,9 @@ class MongoResidueList(dict) :
     assert hasattr(self.db,collection)
     dbcol = getattr(self.db,collection)
     cursor = dbcol.find(q)
+    #print cursor.count()
+    #cursor2 = dbcol.find_one()
+    #print cursor2
     for r in cursor :
       #print r
       self[str(r['_id'])] = MongoResidue(mongodoc = r)
