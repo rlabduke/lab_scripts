@@ -1,0 +1,56 @@
+#
+# This file describes the connectivity of amino acid sidechains.
+# The format uses commas to separate 4-character, PDB-style atom names
+# and semi-colons to separate different polylines (like P in kinemage format).
+# It uses the new PDB v3.X nomenclature.
+#
+aa.mc = " N  , CA , C  , O  , OXT"
+aa.hy = " N  , H  ; CA , HA ; N  , H1 ; N  , H2 ; N  , H3 ;"
+
+gly.sc = ""
+gly.hy = " CA , HA2; CA , HA3"
+ala.sc = " CA , CB "
+ala.hy = " CB , HB1; CB , HB2; CB , HB3"
+val.sc = " CA , CB , CG1; CB , CG2"
+val.hy = " CB , HB ; CG1,HG11; CG1,HG12; CG1,HG13; CG2,HG21; CG2,HG22; CG2,HG23"
+leu.sc = " CA , CB , CG , CD1; CG , CD2"
+leu.hy = " CB , HB2; CB , HB3; CG , HG ; CD1,HD11; CD1,HD12; CD1,HD13; CD2,HD21; CD2,HD22; CD2,HD23"
+ile.sc = " CA , CB , CG1, CD1; CB , CG2"
+ile.hy = " CB , HB ; CG1,HG11; CG1,HG12; CG1,HG13; CG2,HG21; CG2,HG22; CG2,HG23; CD1,HD11; CD1,HD12; CD1,HD13"
+pro.sc = " CA , CB , CG , CD , N  "
+pro.hy = " CB , HB2; CB , HB3; CG , HG2; CG , HG3; CD , HD2; CD , HD3;"
+
+phe.sc = " CA , CB , CG , CD1, CE1, CZ , CE2, CD2, CG "
+phe.hy = " CB , HB2; CB , HB3; CD1, HD1; CD2, HD2; CE1, HE1; CE2, HE2; CZ , HZ "
+tyr.sc = " CA , CB , CG , CD1, CE1, CZ , CE2, CD2, CG ; CZ , OH "
+tyr.hy = " CB , HB2; CB , HB3; CD1, HD1; CD2, HD2; CE1, HE1; CE2, HE2; OH , HH "
+trp.sc = " CA , CB , CG , CD1, NE1, CE2, CD2, CG ; CD2, CE3, CZ3, CH2, CZ2, CE2"
+trp.hy = " CB , HB2; CB , HB3; CD1, HD1; NE1, HE1; CZ2, HZ2; CH2, HH2; CE3, HE3; CZ3, HZ3"
+
+ser.sc = " CA , CB , OG "
+ser.hy = " CB , HB2; CB , HB3; OG , HG "
+thr.sc = " CA , CB , OG1; CB , CG2"
+thr.hy = " CB , HB ; OG1, HG1; CG2,HG21; CG2,HG22; CG2,HG23"
+cys.sc = " CA , CB , SG "
+cys.hy = " CB , HB2; CB , HB3; SG , HG "
+met.sc = " CA , CB , CG , SD , CE "
+met.hy = " CB , HB2; CB , HB3; CG , HG2; CG , HG3; CE , HE1; CE , HE2; CE , HE3"
+mse.sc = " CA , CB , CG ,SED , CE ; CG ,SE  , CE "
+mse.hy = " CB , HB2; CB , HB3; CG , HG2; CG , HG3; CE , HE1; CE , HE2; CE , HE3"
+
+lys.sc = " CA , CB , CG , CD , CE , NZ "
+lys.hy = " CB , HB2; CB , HB3; CG , HG2; CG , HG3; CD , HD2; CD , HD3; CE , HE2; CE , HE3; NZ , HZ1; NZ , HZ2; NZ , HZ3"
+his.sc = " CA , CB , CG , ND1, CE1, NE2, CD2, CG "
+his.hy = " CB , HB2; CB , HB3; ND1, HD1; CE1, HE1; NE2, HE2; CD2, HD2"
+arg.sc = " CA , CB , CG , CD , NE , CZ , NH1; CZ , NH2"
+arg.hy = " CB , HB2; CB , HB3; CG , HG2; CG , HG3; CD , HD2; CD , HD3; NE , HE ; NH1,HH11; NH1,HH12; NH2,HH21; NH2,HH22"
+
+asp.sc = " CA , CB , CG , OD1; CG , OD2"
+asp.hy = " CB , HB2; CB , HB3"
+asn.sc = " CA , CB , CG , OD1; CG , ND2"
+asn.hy = " CB , HB2; CB , HB3; ND2,HD21; ND2,HD22"
+gln.sc = " CA , CB , CG , CD , OE1; CD , NE2"
+gln.hy = " CB , HB2; CB , HB3; CG , HG2; CG , HG3; NE2,HE21; NE2,HE22"
+glu.sc = " CA , CB , CG , CD , OE1; CD , OE2"
+glu.hy = " CB , HB2; CB , HB3; CG , HG2; CG , HG3"
+
