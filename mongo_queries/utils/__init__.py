@@ -2,6 +2,7 @@ import os,sys
 from pymongo import MongoClient
 import json
 import re
+import pprint
 
 reslist = ['ALA', 'CYS', 'GLU', 'ASP', 'GLY', 
            'PHE', 'ILE', 'HIS', 'LYS', 'MET',
@@ -191,6 +192,7 @@ class MongoResidue(object) :
     self.resname  = sstr[6]
     self.nextres  = []
     self.prevres  = []
+    self.translated_atoms = self.init_translated_coords() # should be a deep copy
     self.set_filter_thresholds()
     self.set_omega()
     self.set_rama()
@@ -204,6 +206,24 @@ class MongoResidue(object) :
                        self.resseq,self.icode,self.resname])
     return ' '.join([self.pdb_id,self.model_id,self.chain_id,
                      self.altloc,self.resseq,self.icode,self.resname])
+
+  def init_translated_coords(self):
+    if not 'atoms' in self.raw_mongodoc.keys() : return
+    trans_atoms = {}
+    atoms = self.raw_mongodoc['atoms']
+    for atom in atoms:
+      atom_dict_copy = {}
+      xyz_copy = []
+      for key in atoms[atom]:
+        if key == 'xyz':
+          xyz = atoms[atom]['xyz']
+          for coord in xyz:
+            xyz_copy.append(coord)
+            atom_dict_copy['xyz'] = xyz_copy
+        else:
+          atom_dict_copy[key] = atoms[atom][key]
+      trans_atoms[atom] = atom_dict_copy
+    return trans_atoms
 
   def next_residue_key_list(self) :
     if 'cablam' not in self.raw_mongodoc.keys() : return
@@ -246,6 +266,7 @@ class MongoResidue(object) :
   def is_outlier(self):
     analysis_types = ['rotalyze', 'omegalyze', 'ramalyze']
     mongo_keys = self.raw_mongodoc.keys()
+    if not 'ramalyze' in mongo_keys: return True # knock out chain ends
     for analysis in analysis_types:
       if analysis in mongo_keys:
         if self.raw_mongodoc[analysis]['is_outlier']: return True
@@ -265,13 +286,35 @@ class MongoResidue(object) :
     if 'ramalyze' not in self.raw_mongodoc.keys() : return
     self.ramalyze = group_args(**self.raw_mongodoc['ramalyze'])
 
+  def get_atoms(self):
+    if not 'atoms' in self.raw_mongodoc.keys() : return
+    atoms = self.raw_mongodoc['atoms']
+    return atoms
+
   def get_atom_xyz(self, atom) :
     assert isinstance(atom,str)
     if not 'atoms' in self.raw_mongodoc.keys() : return
     atoms = self.raw_mongodoc['atoms']
     if not atom in atoms.keys() : return
     return atoms[atom]["xyz"]
-
+    
+  def get_translated_xyz(self, atom):
+    if not atom in self.translated_atoms: return
+    return self.translated_atoms[atom]["xyz"]
+    
+  def set_atom_xyz(self, atom, xyz):
+    assert isinstance(atom, str)
+    #if not 'atoms' in self.raw_mongodoc.keys() : return
+    #print("pre set translated_atoms")
+    #pprint.pprint(self.translated_atoms)
+    if not atom in self.translated_atoms.keys() : return
+    atoms_str = str(self.raw_mongodoc['atoms'])
+    #print("setting translated atoms")
+    self.translated_atoms[atom]["xyz"] = xyz
+    #print("post set translated_atoms")
+    #pprint.pprint(self.translated_atoms)
+    assert atoms_str == str(self.raw_mongodoc['atoms']) # test to make sure original atoms not changed
+        
   def lowest_occ(self) :
     lowest_occ = 1
     atoms = self.raw_mongodoc['atoms']
@@ -289,10 +332,10 @@ class MongoResidue(object) :
     if "S" in atom: return "S"
     
   # reconstruct the residue's atom records?  
-  def get_atom_record(self, atom, atom_number):
+  def get_atom_record(self, atom, atoms, atom_number):
     assert isinstance(atom,str)
-    if not 'atoms' in self.raw_mongodoc.keys() : return
-    atoms = self.raw_mongodoc['atoms']
+    #if not 'atoms' in self.raw_mongodoc.keys() : return
+    #atoms = self.raw_mongodoc['atoms']
     if not atom in atoms.keys() : return
     atom_formatter = "ATOM  {atomnum:>5} {atomname}{altloc:>1}{resname} {chainid:>1}{resnum:>4}{icode:>1}   {xcoord:>8.3f}{ycoord:>8.3f}{zcoord:>8.3f}{occ:>6.2f}{bfact:>6.2f}          {element:>2}  {extra}"
     return atom_formatter.format(atomnum=atom_number,
@@ -310,16 +353,56 @@ class MongoResidue(object) :
                                  element=self.get_atom_element(atom),
                                  extra=self.pdb_id+self.resname+self.resseq)
                                      
-  def get_atom_records(self, region="all"):
+  #translated_atoms must have actual atom names
+  def get_atom_records(self, translated=False, region="all"):
     assert region in ['all','bb']
     bb_atom = ["N", "C", "CA", "O", "CB"]
     if not 'atoms' in self.raw_mongodoc.keys() : return
-    atoms = self.raw_mongodoc['atoms']
+    if translated:
+      atoms = self.translated_atoms
+    else:
+      atoms = self.raw_mongodoc['atoms']
     all_records=""
     for atom in sorted(atoms.keys(), key=atom_sort):
       if region=='bb' and atom in bb_atom or region=='all':
-        all_records = all_records+(self.get_atom_record(str(atom), "1")+"\n")
+        all_records = all_records+(self.get_atom_record(str(atom), atoms, "1")+"\n")
     return all_records
+    
+# this is mainly intended to be a list of the residues in a fragment of a PDB
+# for use for generating tom's fragments
+# HACK: only works for fragments up to 9 in length
+class MongoPdbFragment(object):
+  
+  def __init__(self, mongo_residues):
+    self.residues = mongo_residues
+    bb_atom = ["N", "C", "CA", "O", "CB"]
+    bb_atoms_dict = {}
+    for i, mongo_res in enumerate(mongo_residues):
+      for atom in bb_atom:
+        xyz = mongo_res.get_atom_xyz(atom)
+        if atom != "CB" or not xyz is None:
+          bb_atoms_dict[str(i)+atom] = xyz
+    self.bb_atom_coords = bb_atoms_dict
+    
+  def get_bb_atoms(self):
+    return self.bb_atom_coords
+    
+  def set_bb_atoms(self, bb_atoms_dict):
+    self.bb_atom_coords=bb_atoms_dict
+    for i, mongo_res in enumerate(self.residues):
+      #print(mongo_res)
+      for bb_atom in ["N", "C", "CA", "O", "CB"]:
+        #print(atom[1:])
+        if str(i)+bb_atom in bb_atoms_dict:
+          mongo_res.set_atom_xyz(bb_atom,bb_atoms_dict[str(i)+bb_atom])
+        #print("translatedatom: "+str(mongo_res.get_translated_xyz(bb_atom)))
+        
+    
+  def get_atom_records(self, translated=False, region="all"):
+    records=""
+    for residue in self.residues:
+      records = records+residue.get_atom_records(translated, region)
+    return records
 
 class MongoResidueList(dict) :
 
