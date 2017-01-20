@@ -308,12 +308,12 @@ class MongoResidue(object) :
     #print("pre set translated_atoms")
     #pprint.pprint(self.translated_atoms)
     if not atom in self.translated_atoms.keys() : return
-    atoms_str = str(self.raw_mongodoc['atoms'])
+    #atoms_str = str(self.raw_mongodoc['atoms'])
     #print("setting translated atoms")
     self.translated_atoms[atom]["xyz"] = xyz
     #print("post set translated_atoms")
     #pprint.pprint(self.translated_atoms)
-    assert atoms_str == str(self.raw_mongodoc['atoms']) # test to make sure original atoms not changed
+    #assert atoms_str == str(self.raw_mongodoc['atoms']) # test to make sure original atoms not changed
         
   def lowest_occ(self) :
     lowest_occ = 1
@@ -384,6 +384,7 @@ class MongoPdbFragment(object):
           bb_atoms_dict[str(i)+atom] = xyz
     self.bb_atom_coords = bb_atoms_dict
     
+  # bb_atom_coords has the format: {"0N":[x,y,z], "0CA":[x,y,z], ......} 
   def get_bb_atoms(self):
     return self.bb_atom_coords
     
@@ -397,12 +398,33 @@ class MongoPdbFragment(object):
           mongo_res.set_atom_xyz(bb_atom,bb_atoms_dict[str(i)+bb_atom])
         #print("translatedatom: "+str(mongo_res.get_translated_xyz(bb_atom)))
         
-    
   def get_atom_records(self, translated=False, region="all"):
     records=""
     for residue in self.residues:
       records = records+residue.get_atom_records(translated, region)
     return records
+    
+  def get_residues(self):
+    return self.residues
+    
+  def get_rmsd(self, fragment):
+    assert len(self.residues) == len(fragment.get_residues())
+    ref_fragment_coords = self.bb_atom_coords
+    test_fragment_coords = fragment.get_bb_atoms()
+    atom_counter = 0
+    dist_sum = 0
+    for i, mongo_res in enumerate(self.residues):
+      for bb_atom in ["N", "C", "CA", "O"]:
+        current_atom_key = str(i)+bb_atom
+        if current_atom_key in ref_fragment_coords:
+          if current_atom_key in test_fragment_coords:
+            atom_counter = atom_counter + 1
+            ref_xyz = ref_fragment_coords[current_atom_key]
+            test_xyz = test_fragment_coords[current_atom_key]
+            dist_sum = dist_sum + (math.pow((ref_xyz[0]-test_xyz[0]),2)+math.pow((ref_xyz[1]-test_xyz[1]),2)+math.pow((ref_xyz[2]-test_xyz[2]),2))
+    rmsd = math.sqrt(dist_sum/atom_counter)
+    print("rmsd: "+str(rmsd))
+    return rmsd
 
 class MongoResidueList(dict) :
 
