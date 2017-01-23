@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import json
 import re
 import pprint
+import math
 
 reslist = ['ALA', 'CYS', 'GLU', 'ASP', 'GLY', 
            'PHE', 'ILE', 'HIS', 'LYS', 'MET',
@@ -423,7 +424,7 @@ class MongoPdbFragment(object):
             test_xyz = test_fragment_coords[current_atom_key]
             dist_sum = dist_sum + (math.pow((ref_xyz[0]-test_xyz[0]),2)+math.pow((ref_xyz[1]-test_xyz[1]),2)+math.pow((ref_xyz[2]-test_xyz[2]),2))
     rmsd = math.sqrt(dist_sum/atom_counter)
-    print("rmsd: "+str(rmsd))
+    #print("rmsd: "+str(rmsd))
     return rmsd
 
 class MongoResidueList(dict) :

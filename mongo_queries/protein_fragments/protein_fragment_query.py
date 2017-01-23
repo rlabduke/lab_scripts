@@ -109,6 +109,7 @@ def run(args) :
 
   model_num = 1
   file_num = 0
+  fragment_set = {}
   out_file = open("output_fragments0.pdb", 'w')
   mongocon.set_db(db='pdb_info')
   for i,pc in enumerate(pdbs) :
@@ -149,18 +150,31 @@ def run(args) :
                     model_num = 1
                     file_num = file_num + 1
                     out_file.close()
+                    print(fragment_set)
                     #assert False
                     out_file = open("output_fragments"+str(file_num)+".pdb", 'w')
                   fragment = utils.MongoPdbFragment([prev_residue, mongores, next_residue])
-                  #print(fragment.get_bb_atoms())
                   fragment.set_bb_atoms(ca_dock(fragment.get_bb_atoms()))
-                  #print(fragment.get_atom_records('bb'))
-                  #assert False
-                  out_file.write("MODEL{:>9}\n".format(model_num))
-                  out_file.write(fragment.get_atom_records(translated=True, region='bb'))
-                  out_file.write("ENDMDL\n")
-                  model_num = model_num+1
-                  #print("res "+str(mongores)+" prev res: "+str(prev_residue)+" next res: "+str(next_residue))
+                  if len(fragment_set) == 0: 
+                    fragment_set[fragment] = 1
+                  else:
+                    rmsd = 1
+                    for test_frag in fragment_set:
+                      rmsd = fragment.get_rmsd(test_frag)
+                      if rmsd <= 0.5:
+                        break
+                    if rmsd > 0.5:
+                      fragment_set[fragment] = 1
+                      #print(fragment.get_bb_atoms())
+                      #print(fragment.get_atom_records('bb'))
+                      #assert False
+                      out_file.write("MODEL{:>9}\n".format(model_num))
+                      out_file.write(fragment.get_atom_records(translated=True, region='bb'))
+                      out_file.write("ENDMDL\n")
+                      model_num = model_num+1
+                      #print("res "+str(mongores)+" prev res: "+str(prev_residue)+" next res: "+str(next_residue))
+                    else:
+                      fragment_set[test_frag] = fragment_set[test_frag] + 1
   out_file.close()
 
 if __name__ == '__main__' :
