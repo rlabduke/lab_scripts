@@ -6,6 +6,7 @@ import numpy
 import re
 import pprint
 import nqh_hingeCAdock as nqh_dock
+import time
 from cctbx import geometry_restraints
 
 dockatomlist = ["CA", "C", "O"]
@@ -106,6 +107,11 @@ def run(args) :
   if args.verbose :
     s = '%i pdbs found in Top8000 at homology level %i'
     utils.broadcast(s % (len(pdbs),args.homology_level))
+  
+  # print out top8000 list
+  #for pdb_id, chain in pdbs:
+  #  print pdb_id.upper()
+  #assert False
 
   model_num = 1
   file_num = 0
@@ -119,7 +125,12 @@ def run(args) :
     if args.verbose : print "working on %s %s..." % (pdb_id,chain)
     
     #print(mongocon.db)
-    residues = utils.MongoResidueList(mongocon.db, pdb_id, chain)
+    #start_time = time.time()
+    residues = utils.MongoResidueList(mongocon.db, pdb_id, chain, 'top8000_homology70_residues_test')
+    #residues = utils.MongoResidueList(mongocon.db, pdb_id, chain, 'residues_colkeys')
+
+    #elapsed_time = time.time() - start_time
+    #print str(elapsed_time) + " time taken to create MongoResidueList"
     #print(residues)
     keys = residues.ordered_keys()
     #print(keys)

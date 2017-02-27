@@ -4,6 +4,7 @@ import json
 import re
 import pprint
 import math
+import time
 
 reslist = ['ALA', 'CYS', 'GLU', 'ASP', 'GLY', 
            'PHE', 'ILE', 'HIS', 'LYS', 'MET',
@@ -267,16 +268,29 @@ class MongoResidue(object) :
   def is_outlier(self):
     analysis_types = ['rotalyze', 'omegalyze', 'ramalyze']
     mongo_keys = self.raw_mongodoc.keys()
-    if not 'ramalyze' in mongo_keys: return True # knock out chain ends
+    #pprint.pprint(mongo_keys)
+    if not 'ramalyze' in mongo_keys: 
+      return True # knock out chain ends
+    if 'clashes' in mongo_keys: 
+      #print "clashes found"
+      return True
+    if "angle" in mongo_keys: 
+      #print "angleoutfound"
+      return True
+    if "bondlength" in mongo_keys: 
+      #print "bondoutfound"
+      return True
     for analysis in analysis_types:
       if analysis in mongo_keys:
         if self.raw_mongodoc[analysis]['is_outlier']: return True
     if "worst_bb" in mongo_keys:
+      #print "worst_bbfound"
       try:
         if self.raw_mongodoc['worst_bb']['adp']['value'] > 30: return True
       except KeyError:
         print(self.pdb_id+self.resname+self.resseq+" seems to be missing an adp value")
     if "cablam" in mongo_keys:
+      #print "cablam found"
       if self.raw_mongodoc['cablam'][0]['c_alpha_geom_outlier']: return True
 
   def set_omega(self) :
@@ -429,30 +443,43 @@ class MongoPdbFragment(object):
 
 class MongoResidueList(dict) :
 
-  def __init__(self, db, pdb_id, chain=None) :
+  def __init__(self, db, pdb_id, chain=None, collection='residues_colkeys') :
     self.pdb_id = pdb_id.lower()
     self.chain = chain
     self.db = db
-    self.get_residues()
+    #start_time = time.time()
+    self.get_residues(collection)
+    #elapsed_time = time.time() - start_time
+    #print str(elapsed_time) + " time taken to get residues"
     self.link_residues()
     #self.set_counts()
 
   def get_residues(self, collection='residues_colkeys') :
     q = {'pdb_id':self.pdb_id}
     if self.chain : q['chain_id'] = self.chain
+    #q['clashes']={"$exists":False}
+    #q['angle']={"$exists":False}
+    #q['bondlength']={"$exists":False}
+    #q['ramalyze']={"$exists":True}
     assert hasattr(self.db,collection)
     dbcol = getattr(self.db,collection)
     cursor = dbcol.find(q)
+    #cursor = dbcol.find(q).explain()
+    #pprint.pprint(cursor)
     #print cursor.count()
     #cursor2 = dbcol.find_one()
     #print cursor2
     for r in cursor :
       #print r
+      #start_time = time.time()
       self[str(r['_id'])] = MongoResidue(mongodoc = r)
+      #elapsed_time = time.time() - start_time
+      #print str(elapsed_time) + " time taken to loop residues"
       #if self[r['_id']].resname == 'HOH' : continue
       #if not self[r['_id']].has_density_parameters(): continue
       #print self[r['_id']],self[r['_id']].paases_filter()#,self[r['_id']].next_residue()
       #break
+
 
   def get_resolution(self) :
     q = {"_id.pdb_id":self.pdb_id.upper()}
