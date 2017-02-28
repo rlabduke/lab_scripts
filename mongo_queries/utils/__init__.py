@@ -292,6 +292,12 @@ class MongoResidue(object) :
     if "cablam" in mongo_keys:
       #print "cablam found"
       if self.raw_mongodoc['cablam'][0]['c_alpha_geom_outlier']: return True
+    bb_atoms = ["N", "C", "CA", "O"]
+    atoms = self.raw_mongodoc['atoms']
+    for bb_atom in bb_atoms:
+      if not bb_atom in atoms:
+        return True
+    
 
   def set_omega(self) :
     if 'omegalyze' not in self.raw_mongodoc.keys() : return
