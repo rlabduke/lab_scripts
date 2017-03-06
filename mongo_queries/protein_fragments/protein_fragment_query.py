@@ -7,7 +7,9 @@ import re
 import pprint
 import nqh_hingeCAdock as nqh_dock
 import time
+import copy
 from cctbx import geometry_restraints
+from operator import itemgetter
 
 dockatomlist = ["CA", "C", "O"]
 ref_coords_dock = {"CA":[0,0,0],"C":[1.5,0,0],"O":[2.15,1,0]}
@@ -88,13 +90,14 @@ def ca_dock(move_coords, resnum_to_dock="0"):
   return move_coords
 
 def run(args) :
-  desc = "A query script to getnon-pro cis residues from the Top8000 at a "
+  desc = "A query script to protein fragments Top8000 at a "
   desc+= "given homology level."
   print(desc)
   parser = argparse.ArgumentParser(description=desc)
   parser.add_argument('-o','--homology_level', type=int,default=70,
                    help='Homology level can be 50, 70, 90, or 95. Default=70')
   parser.add_argument('-v','--verbose',action='store_true',help='Be verbose')
+  parser.add_argument('-f','--filter_rmsd',action='store_true',help='Do RMSD filtering')
   args = parser.parse_args()
 
   # Get connection to mongo
@@ -119,7 +122,9 @@ def run(args) :
   out_file = open("output_fragments0.pdb", 'w')
   mongocon.set_db(db='pdb_info')
   for i,pc in enumerate(pdbs) :
-    if i % 100 == 0 : print >> sys.stderr, "Through %i of %i.." % (i,len(pdbs))
+    if i % 100 == 0: 
+      print >> sys.stderr, "Through %i of %i.." % (i,len(pdbs))
+      print("Fragments stored: " + str(len(fragment_set)))
     pdb_id,chain = pc
     #pdb_id,chain = "1d3g","A"
     if args.verbose : print "working on %s %s..." % (pdb_id,chain)
@@ -132,6 +137,7 @@ def run(args) :
     #elapsed_time = time.time() - start_time
     #print str(elapsed_time) + " time taken to create MongoResidueList"
     #print(residues)
+    #if len(fragment_set) >1000: break
     keys = residues.ordered_keys()
     #print(keys)
     for k in keys :
@@ -164,30 +170,51 @@ def run(args) :
                     print(fragment_set)
                     #assert False
                     out_file = open("output_fragments"+str(file_num)+".pdb", 'w')
-                  fragment = utils.MongoPdbFragment([prev_residue, mongores, next_residue])
-                  fragment.set_bb_atoms(ca_dock(fragment.get_bb_atoms()))
+                  fragment = utils.MongoPdbFragment([prev_residue.clone(), mongores.clone(), next_residue.clone()])
+                  fragment.set_bb_atoms(ca_dock(fragment.get_bb_atoms(), "2"))
                   if len(fragment_set) == 0: 
                     fragment_set[fragment] = 1
                   else:
-                    rmsd = 1
-                    for test_frag in fragment_set:
-                      rmsd = fragment.get_rmsd(test_frag)
-                      if rmsd <= 0.5:
-                        break
-                    if rmsd > 0.5:
-                      fragment_set[fragment] = 1
-                      #print(fragment.get_bb_atoms())
-                      #print(fragment.get_atom_records('bb'))
-                      #assert False
+                    if args.filter_rmsd:
+                      rmsd = 1
+                      #start_time = time.time()
+                      for test_frag_tup in sorted(fragment_set.iteritems(), key=itemgetter(1), reverse=True):
+                      #for test_frag in fragment_set:
+                        test_frag = test_frag_tup[0]            
+                        rmsd = fragment.get_rmsd(test_frag)
+                        if rmsd <= 0.65:
+                          break
+                      #elapsed_time = time.time() - start_time
+                      #print str(elapsed_time) + " time taken to find matching fragment"
+                      if rmsd > 0.65:
+                        fragment_set[fragment] = 1
+                        #assert False
+                        #out_file.write("MODEL{:>9}\n".format(model_num))
+                        #out_file.write(fragment.get_atom_records(translated=True, region='bb'))
+                        #out_file.write("ENDMDL\n")
+                        #model_num = model_num+1
+                        #print("res "+str(mongores)+" prev res: "+str(prev_residue)+" next res: "+str(next_residue))
+                      else:
+                        fragment_set[test_frag] = fragment_set[test_frag] + 1
+                    else:
                       out_file.write("MODEL{:>9}\n".format(model_num))
                       out_file.write(fragment.get_atom_records(translated=True, region='bb'))
                       out_file.write("ENDMDL\n")
                       model_num = model_num+1
-                      #print("res "+str(mongores)+" prev res: "+str(prev_residue)+" next res: "+str(next_residue))
-                    else:
-                      fragment_set[test_frag] = fragment_set[test_frag] + 1
+  if args.filter_rmsd:
+    print(len(fragment_set))
+    sorted_fragments = sorted(fragment_set.iteritems(), key=itemgetter(1), reverse=True)
+    #pprint.pprint(sorted_fragments)
+    #model_num=1
+    for filtered_frag, count in sorted_fragments:
+      out_file.write("MODEL{:>9}{:>70}\n".format(model_num, count))
+      out_file.write(filtered_frag.get_atom_records(translated=True, region='bb'))
+      out_file.write("ENDMDL\n")
+      model_num = model_num+1
   out_file.close()
 
 if __name__ == '__main__' :
-  run(sys.argv[1:])
+  import cProfile
+  cProfile.run("run(sys.argv[1:])", filename="my.profile")
+  #run(sys.argv[1:])
 

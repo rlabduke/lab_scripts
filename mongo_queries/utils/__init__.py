@@ -201,6 +201,13 @@ class MongoResidue(object) :
 
   def __str__(self) :
     return self.as_str()
+    
+  def clone(self):
+    cls = self.__class__
+    residue_clone = cls.__new__(cls)
+    residue_clone.__dict__.update(self.__dict__)
+    residue_clone.translated_atoms = self.init_translated_coords()
+    return residue_clone
 
   def as_str(self,noalt=False) :
     if noalt :
@@ -331,7 +338,7 @@ class MongoResidue(object) :
     if not atom in self.translated_atoms.keys() : return
     #atoms_str = str(self.raw_mongodoc['atoms'])
     #print("setting translated atoms")
-    self.translated_atoms[atom]["xyz"] = xyz
+    self.translated_atoms[atom]["xyz"] = list(xyz)
     #print("post set translated_atoms")
     #pprint.pprint(self.translated_atoms)
     #assert atoms_str == str(self.raw_mongodoc['atoms']) # test to make sure original atoms not changed
@@ -379,6 +386,7 @@ class MongoResidue(object) :
     assert region in ['all','bb']
     bb_atom = ["N", "C", "CA", "O", "CB"]
     if not 'atoms' in self.raw_mongodoc.keys() : return
+    atoms = {}
     if translated:
       atoms = self.translated_atoms
     else:
@@ -402,8 +410,14 @@ class MongoPdbFragment(object):
       for atom in bb_atom:
         xyz = mongo_res.get_atom_xyz(atom)
         if atom != "CB" or not xyz is None:
-          bb_atoms_dict[str(i)+atom] = xyz
+          bb_atoms_dict[str(i)+atom] = list(xyz)
     self.bb_atom_coords = bb_atoms_dict
+    
+  def __str__(self):
+    return str(self.residues[0])+" - "+str(self.residues[-1])
+  
+  def __repr__(self):
+    return str(self.residues[0])+" - "+str(self.residues[-1])
     
   # bb_atom_coords has the format: {"0N":[x,y,z], "0CA":[x,y,z], ......} 
   def get_bb_atoms(self):
@@ -442,6 +456,7 @@ class MongoPdbFragment(object):
             atom_counter = atom_counter + 1
             ref_xyz = ref_fragment_coords[current_atom_key]
             test_xyz = test_fragment_coords[current_atom_key]
+            #dist_sum = dist_sum + ((ref_xyz[0]-test_xyz[0])**2+(ref_xyz[1]-test_xyz[1])**2+(ref_xyz[2]-test_xyz[2])**2)
             dist_sum = dist_sum + (math.pow((ref_xyz[0]-test_xyz[0]),2)+math.pow((ref_xyz[1]-test_xyz[1]),2)+math.pow((ref_xyz[2]-test_xyz[2]),2))
     rmsd = math.sqrt(dist_sum/atom_counter)
     #print("rmsd: "+str(rmsd))
