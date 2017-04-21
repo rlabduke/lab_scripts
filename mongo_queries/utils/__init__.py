@@ -105,12 +105,13 @@ def get_filtered_pdbs(high_resolution,
                       connection=None,
                       limit=None,
                       experimental_method="X-ray diffraction",
-                      verbose=False) :
+                      verbose=False,
+                      low_resolution=0.0) :
   assert type(high_resolution) == float
   if connection : isinstance(connection,MongodbConnection)
   else : connection = MongodbConnection()
   qd = {"experimental_method":experimental_method}
-  qd['resolution'] = {'$lte':high_resolution}
+  qd['resolution'] = {'$lte':high_resolution, '$gte':low_resolution}
   pd = {"_id":1}
   if limit :
     assert type(limit) == int
@@ -360,11 +361,13 @@ class MongoResidue(object) :
     if "S" in atom: return "S"
     
   # reconstruct the residue's atom records?  
-  def get_atom_record(self, atom, atoms, atom_number):
+  def get_atom_record(self, atom, atoms, atom_number, renumber_resnum=None):
     assert isinstance(atom,str)
     #if not 'atoms' in self.raw_mongodoc.keys() : return
     #atoms = self.raw_mongodoc['atoms']
     if not atom in atoms.keys() : return
+    if renumber_resnum is None:
+      renumber_resnum = self.resseq
     atom_formatter = "ATOM  {atomnum:>5} {atomname}{altloc:>1}{resname} {chainid:>1}{resnum:>4}{icode:>1}   {xcoord:>8.3f}{ycoord:>8.3f}{zcoord:>8.3f}{occ:>6.2f}{bfact:>6.2f}          {element:>2}  {extra}"
     return atom_formatter.format(atomnum=atom_number,
                                  atomname=format_atom(atom),
@@ -372,7 +375,7 @@ class MongoResidue(object) :
                                  resname=self.resname,
                                  chainid=self.chain_id,
                                  icode=self.icode,
-                                 resnum=self.resseq,
+                                 resnum=renumber_resnum,
                                  xcoord=atoms[atom]["xyz"][0],
                                  ycoord=atoms[atom]["xyz"][1],
                                  zcoord=atoms[atom]["xyz"][2],
@@ -382,7 +385,7 @@ class MongoResidue(object) :
                                  extra=self.pdb_id+self.resname+self.resseq)
                                      
   #translated_atoms must have actual atom names
-  def get_atom_records(self, translated=False, region="all"):
+  def get_atom_records(self, translated=False, region="all", renumber_residue=None):
     assert region in ['all','bb']
     bb_atom = ["N", "C", "CA", "O", "CB"]
     if not 'atoms' in self.raw_mongodoc.keys() : return
@@ -394,7 +397,7 @@ class MongoResidue(object) :
     all_records=""
     for atom in sorted(atoms.keys(), key=atom_sort):
       if region=='bb' and atom in bb_atom or region=='all':
-        all_records = all_records+(self.get_atom_record(str(atom), atoms, "1")+"\n")
+        all_records = all_records+(self.get_atom_record(str(atom), atoms, "1", renumber_residue)+"\n")
     return all_records
     
 # this is mainly intended to be a list of the residues in a fragment of a PDB
@@ -435,8 +438,8 @@ class MongoPdbFragment(object):
         
   def get_atom_records(self, translated=False, region="all"):
     records=""
-    for residue in self.residues:
-      records = records+residue.get_atom_records(translated, region)
+    for i, residue in enumerate(self.residues):
+      records = records+residue.get_atom_records(translated, region, i+1)
     return records
     
   def get_residues(self):
